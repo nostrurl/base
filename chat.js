@@ -1,7 +1,10 @@
 // =================================================================
-// ✨ Tampermonkey / 同一ドメインiframe対応のためのポリフィル（完全版）
+// ✨ Tampermonkey / 同一ドメインiframe対応のためのポリフィル（最終完全版）
 // =================================================================
 if (typeof chrome === 'undefined' || !chrome.runtime) {
+    // リスナーを退避させておくためのグローバルな配列
+    window._mockListeners = window._mockListeners || [];
+
     window.chrome = {
         runtime: {
             // アイコン画像のパスをGitHubのRaw URLにすり替える
@@ -17,6 +20,8 @@ if (typeof chrome === 'undefined' || !chrome.runtime) {
                         try {
                             const pubKey = await parentNostr.getPublicKey();
                             if (callback) callback({ pubKey: pubKey });
+                            // 退避させておいたメッセージリスナー（startPublicKeyMonitorなど）にも通知を届ける
+                            window._mockListeners.forEach(ln => ln({ type: 'CHAT_UI_FORCE_UPDATE', pubKey: pubKey }));
                         } catch(e) {
                             if (callback) callback({ pubKey: "Guest" });
                         }
@@ -37,10 +42,12 @@ if (typeof chrome === 'undefined' || !chrome.runtime) {
                     }
                 }
             },
-            // イベントリスナー登録部屋（エラー停止防止用）
+            // イベントリスナーをちゃんと配列に捕獲する形に強化
             onMessage: {
                 addListener: function(callback) {
-                    // ダミー関数（親ページからのイベントを直接監視する仕組みがあるため、ここではエラー回避のみ）
+                    if (typeof callback === 'function') {
+                        window._mockListeners.push(callback);
+                    }
                 }
             }
         }
@@ -97,7 +104,7 @@ console.log("初期設定の全リレー数:", DEFAULT_CONFIG.RELAY_URLS.length)
 console.log("現在読み込まれたリレー数:", currentConfig.RELAY_URLS.length);
 
 const urlParams = new URLSearchParams(window.location.search);
-const currentUrl = urlParams.get('url') || "about:blank"; 
+const currentUrl = window.REAL_PARENT_URL || urlParams.get('url') || window.location.href || "about:blank";
 let nostrUrlTargetKey = generateTargetKey(currentUrl, currentConfig);
 let pubKey = "Guest";
 let isRelayConnected = false;
