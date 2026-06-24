@@ -1,3 +1,53 @@
+// =================================================================
+// ✨ Tampermonkey / 同一ドメインiframe対応のためのポリフィル（完全版）
+// =================================================================
+if (typeof chrome === 'undefined' || !chrome.runtime) {
+    window.chrome = {
+        runtime: {
+            // アイコン画像のパスをGitHubのRaw URLにすり替える
+            getURL: function(path) {
+                return "https://raw.githubusercontent.com/nostrurl/base/main/assets/" + path;
+            },
+            // 拡張機能のメッセージの代わりに、親ページの window.parent.nostr を直接叩いて結果を疑似返却する
+            sendMessage: async function(message, callback) {
+                const parentNostr = window.parent && window.parent.nostr;
+                
+                if (message.type === 'GET_PUBLIC_KEY') {
+                    if (parentNostr) {
+                        try {
+                            const pubKey = await parentNostr.getPublicKey();
+                            if (callback) callback({ pubKey: pubKey });
+                        } catch(e) {
+                            if (callback) callback({ pubKey: "Guest" });
+                        }
+                    } else {
+                        if (callback) callback({ pubKey: "No Extension" });
+                    }
+                } 
+                else if (message.type === 'SIGN_EVENT') {
+                    if (parentNostr) {
+                        try {
+                            const signedEvent = await parentNostr.signEvent(message.event);
+                            if (callback) callback({ success: true, event: signedEvent });
+                        } catch(e) {
+                            if (callback) callback({ success: false });
+                        }
+                    } else {
+                        if (callback) callback({ success: false });
+                    }
+                }
+            },
+            // イベントリスナー登録部屋（エラー停止防止用）
+            onMessage: {
+                addListener: function(callback) {
+                    // ダミー関数（親ページからのイベントを直接監視する仕組みがあるため、ここではエラー回避のみ）
+                }
+            }
+        }
+    };
+}
+// =================================================================
+
 // --- 1. 定義と設定 ---
 const DEFAULT_CONFIG = {
     ROOM_MODE: 'url',
