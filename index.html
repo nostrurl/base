@@ -2,13 +2,83 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>Nostrurl's Lab</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nostrurl's Lab - 迷子のゴブリンの工房</title>
     <style>
-        body { background: #fdf6e3; color: #586e75; font-family: sans-serif; padding: 50px; }
+        /* ソーラライズド(Solarized)風の目に優しいベースカラー */
+        body { 
+            background: #fdf6e3; 
+            color: #586e75; 
+            font-family: 'Helvetica Neue', Arial, sans-serif; 
+            line-height: 1.7;
+            max-width: 700px; 
+            margin: 0 auto; 
+            padding: 60px 20px; 
+        }
+        h1 { color: #b58900; border-bottom: 2px solid #eee8d5; padding-bottom: 10px; }
+        h2 { color: #cb4b16; margin-top: 40px; }
+        p { font-size: 16px; }
+        
+        /* インストール用カードのデザイン */
+        .card {
+            background: #eee8d5;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+        .card h3 { margin-top: 0; color: #6a1b9a; }
+        
+        /* 紫色のトグルバーをオマージュしたボタン */
+        .btn {
+            display: inline-block;
+            background-color: #6a1b9a;
+            color: #ffffff;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 15px;
+            transition: background 0.2s;
+        }
+        .btn:hover { background-color: #4a148c; }
+        
+        .notice {
+            font-size: 13px;
+            color: #93a1a1;
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
+
     <h1>迷子のゴブリンの工房へ</h1>
-    <p>何も知らずにNostrurlを作ってる？</p>
+    <p>何も知らずに、ただ「どこでも誰かと話したい」という執念だけで **Nostrurl** を作っている、迷子のゴブリンの実験場です。</p>
+
+    <h2>🧪 成果物の配布</h2>
+    <p>ブラウザにTampermonkeyなどのユーザースクリプト管理拡張機能を入れた状態で、以下のボタンを押すとインストールできます。</p>
+
+    <div class="card">
+        <h3>1. Nostrurl (インクルード版 / 通常用)</h3>
+        <p>普通のWebサイトやブログにそっと寄り添う、軽量最新版。親ページのスクロールやデザインを絶対に壊しません。</p>
+        <a href="https://raw.githubusercontent.com/ユーザー名/リポジトリ名/main/nostrurl.user.js" class="btn">スクリプトを導入する ◁</a>
+        <p class="notice">⚠️ GitHubやX(旧Twitter)などの強固なセキュリティを持つサイトでは、サイト側の主権を尊重して動作を停止し、案内を表示します。</p>
+    </div>
+
+    <div class="card">
+        <h3>2. Nostrurl (スタンドアロン版 / Ver 4.1.0系)</h3>
+        <p>すべてを1ファイルに内包した、CSP（セキュリティ制限）に対する絶対的なカウンター。どこでも無理やりチャットを開きます。</p>
+        <a href="https://raw.githubusercontent.com/ユーザー名/リポジトリ名/main/nostrurl_standalone.user.js" class="btn" style="background-color: #586e75;">スタンドアロン版を導入する ◁</a>
+        <p class="notice">⚠️ 親ページを独自の空間に包み込むため、元のサイトのJavaScriptやデザインが一部崩れるトレードオフがあります。</p>
+    </div>
+
+    <h2>🎨 使い方</h2>
+    <p>導入後、Webサイトを開くと画面右端に、工房の目印である紫色のトグルバー **「◁」** が出現します。それをクリックすると、そのページ固有のNostrチャットルームがスライドインします。</p>
+
+    <hr style="border: 0; border-top: 1px solid #eee8d5; margin-top: 50px;">
+    <footer style="font-size: 12px; color: #93a1a1; text-align: center;">
+        <p>© 2026 Nostrurl's Lab. Powered by Nostr Protocol.</p>
+    </footer>
+
 </body>
 </html>
