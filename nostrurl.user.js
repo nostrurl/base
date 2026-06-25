@@ -1,0 +1,167 @@
+// ==UserScript==
+// @name         Nostrurl (Parallel Direct Frame Injection)
+// @namespace    nostrurl.app.local
+// @version      6.2.6
+// @description  URLをタグにしたNostrコメント欄を設ける
+// @author       Nostrurl
+// @match        http://*/*
+// @match        https://*/*
+// @icon         https://raw.githubusercontent.com/nostrurl/base/refs/heads/main/assets/icon.png
+// @run-at       document-end
+// @grant        none
+// ==/UserScript==
+
+(function() {
+    'use strict';
+    if (window.top !== window.self) return;
+
+    const GITHUB_RAW_HTML_URL = "https://raw.githubusercontent.com/nostrurl/base/main/chat.html";
+    const GITHUB_RAW_JS_URL = "https://raw.githubusercontent.com/nostrurl/base/main/chat.js";
+
+    if (document.body) {
+        setupParallelUI();
+    } else {
+        window.addEventListener('DOMContentLoaded', setupParallelUI);
+    }
+
+    async function setupParallelUI() {
+        const targetBody = document.body;
+
+        const toggleBar = document.createElement('div');
+        toggleBar.id = 'nostr-toggle-bar';
+        toggleBar.style.cssText = `
+            position: fixed !important;
+            bottom: 15% !important;
+            right: 0px !important;
+            width: 24px !important;
+            height: 100px !important;
+            background-color: #6a1b9a !important;
+            color: #ffffff !important;
+            border-radius: 8px 0 0 8px !important;
+            cursor: pointer !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            font-size: 14px !important;
+            font-weight: bold !important;
+            box-shadow: -2px 0 10px rgba(0,0,0,0.3) !important;
+            user-select: none !important;
+            z-index: 1000000 !important;
+            transition: transform 0.3s ease-in-out !important;
+        `;
+        toggleBar.innerText = '◁';
+
+        const commentIframe = document.createElement('iframe');
+        commentIframe.id = 'nostr-comment-iframe';
+        commentIframe.style.cssText = `
+            position: fixed !important;
+            top: 0px !important;
+            right: 0px !important;
+            width: 350px !important;
+            height: 100% !important;
+            border: none !important;
+            background: #1a1a1a !important;
+            z-index: 999999 !important;
+            transform: translateX(350px) !important;
+            transition: transform 0.3s ease-in-out !important;
+            box-shadow: -5px 0 15px rgba(0,0,0,0.5) !important;
+        `;
+
+        targetBody.appendChild(commentIframe);
+        targetBody.appendChild(toggleBar);
+
+        let isOpen = false;
+        let isInitialized = false;
+
+        toggleBar.onclick = async () => {
+            isOpen = !isOpen;
+            if (isOpen) {
+                toggleBar.innerText = '▷';
+                commentIframe.style.setProperty('transform', 'translateX(0px)', 'important');
+                toggleBar.style.setProperty('transform', 'translateX(-350px)', 'important');
+
+                document.documentElement.style.setProperty('margin-right', '350px', 'important');
+                document.documentElement.style.setProperty('width', 'calc(100% - 350px)', 'important');
+                document.documentElement.style.setProperty('transition', 'margin-right 0.3s ease, width 0.3s ease', 'important');
+
+                if (!isInitialized) {
+                    isInitialized = true;
+                    await fetchAndInjectEverything(commentIframe);
+                }
+            } else {
+                toggleBar.innerText = '◁';
+                commentIframe.style.setProperty('transform', 'translateX(350px)', 'important');
+                toggleBar.style.setProperty('transform', 'translateX(0px)', 'important');
+                document.documentElement.style.setProperty('margin-right', '0px', 'important');
+                document.documentElement.style.setProperty('width', '100%', 'important');
+            }
+        };
+    }
+
+    async function fetchAndInjectEverything(iframe) {
+        const noticeHTML = `
+            <div style="color: #ff5252; background: #1a1a1a; padding: 20px; font-family: sans-serif; font-size: 14px; line-height: 1.6; text-align: center;">
+                <div style="font-size: 24px; margin-bottom: 10px;">⚠️</div>
+                <strong>起動制限</strong><br>
+                サイトのセキュリティ設定により、<br>
+                Nostrurlの実行がブロックされました。<br>
+                <span style="font-size: 12px; color: #aaa;">（拡張機能版をご利用ください）</span>
+            </div>
+        `;
+
+        try {
+            const timestamp = Date.now();
+            const [htmlRes, jsRes] = await Promise.all([
+                fetch(`${GITHUB_RAW_HTML_URL}?t=${timestamp}`),
+                fetch(`${GITHUB_RAW_JS_URL}?t=${timestamp}`)
+            ]);
+
+            if (!htmlRes.ok || !jsRes.ok) throw new Error("データ取得に失敗しました。");
+
+            const htmlText = await htmlRes.text();
+            const jsText = await jsRes.text();
+
+            const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+            iframeDoc.open();
+            iframeDoc.write(htmlText);
+
+            iframe.contentWindow.REAL_PARENT_URL = window.location.href;
+
+            // チャット側のJSが動いた証拠を残すための目印（初期値はfalse）
+            iframe.contentWindow.NOSTR_CHAT_ALIVE = false;
+
+            const scriptElement = iframeDoc.createElement('script');
+            scriptElement.textContent = jsText;
+            iframeDoc.body.appendChild(scriptElement);
+            iframeDoc.close();
+
+            console.log("[Nostrurl] インクルード処理完了（生存確認開始）");
+
+            // ⏱️ 1秒後にチャットJSが起動したかチェックする（GitHubのサイレント拒否対策）
+            setTimeout(() => {
+                // チャットのメインJS（chat.js）の先頭付近に `window.NOSTR_CHAT_ALIVE = true;` を仕込んでおく、
+                // または実行されれば勝手に生える変数（例えばチャットアプリのオブジェクトなど）をチェックする
+                if (!iframe.contentWindow.NOSTR_CHAT_ALIVE) {
+                    console.warn("[Nostrurl] スクリプトの実行拒否（CSP）を検知しました。");
+                    showNotice(iframe, noticeHTML);
+                }
+            }, 1000);
+
+        } catch (e) {
+            console.warn("[Nostrurl] 通信エラーを検知しました:", e.message);
+            showNotice(iframe, noticeHTML);
+        }
+    }
+
+    // メッセージ書き換え用の共通関数
+    function showNotice(iframe, html) {
+        try {
+            const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+            iframeDoc.open();
+            iframeDoc.write(html);
+            iframeDoc.close();
+        } catch (e) {
+            console.error("[Nostrurl] UIの書き換えに失敗:", e);
+        }
+    }
+})();
