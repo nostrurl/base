@@ -1,6 +1,10 @@
 // =================================================================
 // ✨ Tampermonkey / 同一ドメインiframe対応のためのポリフィル（最終完全版）
 // =================================================================
+
+// 動作確認
+if (window.top !== window.self) { window.NOSTR_CHAT_ALIVE = true; }
+
 if (typeof chrome === 'undefined' || !chrome.runtime) {
     // リスナーを退避させておくためのグローバルな配列
     window._mockListeners = window._mockListeners || [];
