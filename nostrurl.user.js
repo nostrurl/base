@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name         Nostrurl (Parallel Direct Frame Injection)
+// @name         Nostrurl (ユーザースクリプト版)
 // @namespace    nostrurl.app.local
 // @version      6.2.6
 // @description  URLをタグにしたNostrコメント欄を設ける
@@ -137,7 +137,7 @@
 
             console.log("[Nostrurl] インクルード処理完了（生存確認開始）");
 
-            // ⏱️ 1秒後にチャットJSが起動したかチェックする（GitHubのサイレント拒否対策）
+            // ️1秒後にチャットJSが起動したかチェックする（GitHubのサイレント拒否対策）
             setTimeout(() => {
                 // チャットのメインJS（chat.js）の先頭付近に `window.NOSTR_CHAT_ALIVE = true;` を仕込んでおく、
                 // または実行されれば勝手に生える変数（例えばチャットアプリのオブジェクトなど）をチェックする
