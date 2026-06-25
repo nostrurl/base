@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Nostrurl (ユーザースクリプト版)
-// @namespace    nostrurl.app.local
-// @version      6.2.6
+// @namespace    nostrurl.github.io/base/
+// @version      6.2.7
 // @description  URLをタグにしたNostrコメント欄を設ける
 // @author       Nostrurl
 // @match        http://*/*
