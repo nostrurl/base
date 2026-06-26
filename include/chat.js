@@ -92,7 +92,32 @@ function saveConfig(config) {
 
 function generateTargetKey(url, config) {
     const roomName = config.CUSTOM_ROOM_NAME || 'Nostrurl';
-    const cleanUrl = url.split('#')[0];
+    
+    // 1. まずハッシュ（#）以降を削る
+    let cleanUrl = url.split('#')[0];
+    
+    // 2. Googleのキャッシュ回避用パラメータ（zx）や、一般的な追跡パラメータ（utm_*）を削ぎ落とす
+    try {
+        const urlObj = new URL(cleanUrl);
+        
+        // 削りたいパラメータのリスト
+        const badParams = ['zx', 'utm_source', 'utm_medium', 'utm_campaign', 'gclid'];
+        
+        badParams.forEach(param => {
+            urlObj.searchParams.delete(param);
+        });
+        
+        // パラメータを消した後のURLを再構築（末尾の無駄な「?」なども防ぐ）
+        cleanUrl = urlObj.origin + urlObj.pathname;
+        const remainingParams = urlObj.searchParams.toString();
+        if (remainingParams) {
+            cleanUrl += '?' + remainingParams;
+        }
+    } catch (e) {
+        // 万が一URLのパースに失敗した場合は元の文字列のまま処理
+        console.error("URLのクリーンアップに失敗:", e);
+    }
+
     if (config.ROOM_MODE === 'url') return cleanUrl;
     if (config.ROOM_MODE === 'room_name') return roomName;
     return cleanUrl + roomName;
