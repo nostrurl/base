@@ -98,14 +98,26 @@
         };
     }
 
-    async function fetchAndInjectEverything(iframe) {
-        const noticeHTML = `
+async function fetchAndInjectEverything(iframe) {
+        // --- 1. 原因ごとのHTMLテンプレートを定義 ---
+        const cspNoticeHTML = `
             <div style="color: #ff5252; background: #1a1a1a; padding: 20px; font-family: sans-serif; font-size: 14px; line-height: 1.6; text-align: center;">
                 <div style="font-size: 24px; margin-bottom: 10px;">⚠️</div>
                 <strong>起動制限</strong><br>
                 サイトのセキュリティ設定により、<br>
                 Nostrurlの実行がブロックされました。<br>
                 <span style="font-size: 12px; color: #aaa;">（拡張機能版をご利用ください）</span>
+            </div>
+        `;
+
+        const networkNoticeHTML = `
+            <div style="color: #ffb74d; background: #1a1a1a; padding: 20px; font-family: sans-serif; font-size: 14px; line-height: 1.6; text-align: center;">
+                <div style="font-size: 24px; margin-bottom: 10px;">📡</div>
+                <strong>通信エラー</strong><br>
+                スクリプトの取得に失敗しました。<br>
+                ネットワーク接続やGitHubの状態を<br>
+                確認してください。<br>
+                <span style="font-size: 11px; color: #aaa; display: inline-block; margin-top: 8px;">一時的なエラーの可能性があります</span>
             </div>
         `;
 
@@ -116,7 +128,10 @@
                 fetch(`${GITHUB_RAW_JS_URL}?t=${timestamp}`)
             ]);
 
-            if (!htmlRes.ok || !jsRes.ok) throw new Error("データ取得に失敗しました。");
+            // 404や500エラーなどのHTTPエラーはここでキャッチしてネットワークエラー側へ
+            if (!htmlRes.ok || !jsRes.ok) {
+                throw new Error("HTTP_ERROR");
+            }
 
             const htmlText = await htmlRes.text();
             const jsText = await jsRes.text();
@@ -126,8 +141,6 @@
             iframeDoc.write(htmlText);
 
             iframe.contentWindow.REAL_PARENT_URL = window.location.href;
-
-            // チャット側のJSが動いた証拠を残すための目印（初期値はfalse）
             iframe.contentWindow.NOSTR_CHAT_ALIVE = false;
 
             const scriptElement = iframeDoc.createElement('script');
@@ -137,19 +150,18 @@
 
             console.log("[Nostrurl] インクルード処理完了（生存確認開始）");
 
-            // ️1秒後にチャットJSが起動したかチェックする（GitHubのサイレント拒否対策）
+            // 1秒後のチェックで動いていなければ、それは「通信は成功したのにJSが動かない＝CSP制限」と確定
             setTimeout(() => {
-                // チャットのメインJS（chat.js）の先頭付近に `window.NOSTR_CHAT_ALIVE = true;` を仕込んでおく、
-                // または実行されれば勝手に生える変数（例えばチャットアプリのオブジェクトなど）をチェックする
                 if (!iframe.contentWindow.NOSTR_CHAT_ALIVE) {
                     console.warn("[Nostrurl] スクリプトの実行拒否（CSP）を検知しました。");
-                    showNotice(iframe, noticeHTML);
+                    showNotice(iframe, cspNoticeHTML);
                 }
             }, 1000);
 
         } catch (e) {
-            console.warn("[Nostrurl] 通信エラーを検知しました:", e.message);
-            showNotice(iframe, noticeHTML);
+            // catchに来たものは通信遮断や404エラーなので、ネットワークエラーを表示
+            console.warn("[Nostrurl] 通信エラーまたは取得失敗を検知しました:", e.message);
+            showNotice(iframe, networkNoticeHTML);
         }
     }
 
