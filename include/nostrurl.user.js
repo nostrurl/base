@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Nostrurl (ユーザースクリプト版)
 // @namespace    nostrurl.github.io/base/
-// @version      6.2.7
+// @version      6.2.8
 // @description  URLをタグにしたNostrコメント欄を設ける
 // @author       Nostrurl
 // @match        http://*/*
@@ -15,8 +15,8 @@
     'use strict';
     if (window.top !== window.self) return;
 
-    const GITHUB_RAW_HTML_URL = "https://raw.githubusercontent.com/nostrurl/base/main/chat.html";
-    const GITHUB_RAW_JS_URL = "https://raw.githubusercontent.com/nostrurl/base/main/chat.js";
+	const GITHUB_RAW_HTML_URL = "https://raw.githubusercontent.com/nostrurl/base/main/include/chat.html";
+	const GITHUB_RAW_JS_URL = "https://raw.githubusercontent.com/nostrurl/base/main/include/chat.js";
 
     if (document.body) {
         setupParallelUI();
