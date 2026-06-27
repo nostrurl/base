@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Nostrurl (ユーザースクリプト版)
 // @namespace    nostrurl.github.io/base/
-// @version      6.2.15
+// @version      6.2.16
 // @description  URLをタグにしたNostrコメント欄を設ける
 // @author       Nostrurl
 // @match        http://*/*
@@ -148,9 +148,10 @@
                     .filter(line => line && !line.startsWith('#'));
             }
 
-            // ─── URLのクレンジング処理 ───
-            const cleanUrl = new URL(window.location.href);
-            const currentKeys = [...cleanUrl.searchParams.keys()];
+			// ─── URLのクレンジング処理 ───
+            // 判定ロジックを確実にするため、一旦処理用のURLオブジェクトを作成
+            const targetUrl = new URL(window.location.href);
+            const currentKeys = [...targetUrl.searchParams.keys()];
 
             for (const key of currentKeys) {
                 const shouldDelete = purgeRules.some(rule => {
@@ -161,9 +162,12 @@
                 });
 
                 if (shouldDelete) {
-                    cleanUrl.searchParams.delete(key);
+                    targetUrl.searchParams.delete(key);
                 }
             }
+
+            // 最終的に出来上がった綺麗なURLを代入
+            const cleanUrl = targetUrl.toString();
             // ──────────────────────────────
 
             const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
@@ -179,7 +183,7 @@
                 versionElement.innerText = typeof GM_info !== 'undefined' ? `v${GM_info.script.version}` : '不正なバージョン';
             }
 
-            iframe.contentWindow.REAL_PARENT_URL = cleanUrl.toString();
+            iframe.contentWindow.REAL_PARENT_URL = cleanUrl;
             iframe.contentWindow.NOSTR_CHAT_ALIVE = false;
 
             const scriptElement = iframeDoc.createElement('script');
