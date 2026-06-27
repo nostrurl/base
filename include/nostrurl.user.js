@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Nostrurl (ユーザースクリプト版)
 // @namespace    nostrurl.github.io/base/
-// @version      6.3.0
+// @version      6.3.1
 // @description  URLをタグにしたNostrコメント欄を設ける
 // @author       Nostrurl
 // @match        http://*/*
@@ -67,6 +67,11 @@
             transition: transform 0.3s ease-in-out !important;
             box-shadow: -5px 0 15px rgba(0,0,0,0.5) !important;
         `;
+
+		// 権限を与える
+        commentIframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-forms');
+        commentIframe.setAttribute('allow', 'cross-origin-isolated');
+        commentIframe.name = 'nostr-comment-frame';
 
         targetBody.appendChild(commentIframe);
         targetBody.appendChild(toggleBar);
