@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Nostrurl (ユーザースクリプト版)
 // @namespace    nostrurl.github.io/base/
-// @version      6.6.0
+// @version      6.6.2
 // @description  URLをタグにしたNostrコメント欄を設ける
 // @author       Nostrurl
 // @match        http://*/*
@@ -10,7 +10,8 @@
 // @homepageURL  https://github.com/nostrurl/base
 // @supportURL   https://github.com/nostrurl/base/issues
 // @run-at       document-end
-// @grant        none
+// @grant        GM_xmlhttpRequest
+// @connect      raw.githubusercontent.com
 // ==/UserScript==
 
 (function() {
@@ -192,6 +193,36 @@
         };
     }
 
+	// ほわいと・ブラックのリストを反映するために Tampermonkey の特権通信を使うラッパー関数
+    function customFetch(url) {
+        return new Promise((resolve, reject) => {
+            if (typeof GM_xmlhttpRequest === 'undefined') {
+                // 万が一 @grant が効いていない環境用のフォールバック
+                fetch(url).then(resolve).catch(reject);
+                return;
+            }
+
+            GM_xmlhttpRequest({
+                method: "GET",
+                url: url,
+                onload: function(response) {
+                    if (response.status >= 200 && response.status < 300) {
+                        // 標準の fetch.text() や ok プロパティに似せたオブジェクトを返す
+                        resolve({
+                            ok: true,
+                            text: () => Promise.resolve(response.responseText)
+                        });
+                    } else {
+                        resolve({ ok: false });
+                    }
+                },
+                onerror: function(err) {
+                    reject(err);
+                }
+            });
+        });
+    }
+
     // ─── 各種インジェクション・パージ処理 ───
     async function fetchAndInjectEverything(iframe) {
         const cspNoticeHTML = `<div style="color:#ff5252;background:#1a1a1a;padding:20px;font-family:sans-serif;text-align:center;">⚠️ 起動制限（拡張機能版をご利用ください）</div>`;
@@ -200,12 +231,12 @@
         try {
             const timestamp = Date.now();
             // ✨ GITHUB_RAW_FILTER_JS_URL を取得リストに追加
-            const [htmlRes, cssRes, filterJsRes, jsRes, purgeRes] = await Promise.all([
-                fetch(`${GITHUB_RAW_HTML_URL}?t=${timestamp}`),
-                fetch(`${GITHUB_RAW_CSS_URL}?t=${timestamp}`),
-                fetch(`${GITHUB_RAW_FILTER_JS_URL}?t=${timestamp}`),
-                fetch(`${GITHUB_RAW_JS_URL}?t=${timestamp}`),
-                fetch(`${GITHUB_RAW_PURGE_URL}?t=${timestamp}`).catch(() => null)
+			const [htmlRes, cssRes, filterJsRes, jsRes, purgeRes] = await Promise.all([
+                customFetch(`${GITHUB_RAW_HTML_URL}?t=${timestamp}`).catch(() => null),
+                customFetch(`${GITHUB_RAW_CSS_URL}?t=${timestamp}`).catch(() => null),
+                customFetch(`${GITHUB_RAW_FILTER_JS_URL}?t=${timestamp}`).catch(() => null),
+                customFetch(`${GITHUB_RAW_JS_URL}?t=${timestamp}`).catch(() => null),
+                customFetch(`${GITHUB_RAW_PURGE_URL}?t=${timestamp}`).catch(() => null)
             ]);
 
             if (!htmlRes.ok || !cssRes.ok || !filterJsRes.ok || !jsRes.ok) throw new Error("HTTP_ERROR");
