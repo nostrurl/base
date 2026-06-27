@@ -4,198 +4,69 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nostrurl's Lab</title>
-    <style>
-        /* --- チャットアプリの基本設定を完全移植 --- */
-        html, body { 
-            margin: 0; padding: 0;
-            width: 100%; height: 100%;
-            background-color: #1a1a1a; color: #e0e0e0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            overflow-x: hidden; /* インデックス用に縦スクロールは許可 */
-        }
-        * { box-sizing: border-box; }
-
-        /* --- 配布サイト用のコンテナ（最大幅を絞って見やすく） --- */
-        .container {
-            max-width: 700px;
-            margin: 0 auto;
-            padding: 60px 16px;
-        }
-
-        /* --- タイトル・見出し（チャットアプリ基準） --- */
-        h1 { margin: 0 0 16px 0; font-size: 28px; font-weight: 600; color: #ffffff; }
-        
-        /* .menu-title 準拠のサブタイトル */
-        h2 { 
-            font-size: 18px; font-weight: bold; color: #b388ff;
-            margin: 40px 0 14px 0; border-bottom: 1px solid #333; padding-bottom: 6px; 
-        }
-        p { font-size: 14px; color: #e0e0e0; line-height: 1.6; }
-
-        /* --- インストール用カード（#manual-view と .gui-control のハイブリッド） --- */
-        .card {
-            background-color: #161616; 
-            border: 1px solid #2d2d2d;
-            padding: 20px; 
-            margin: 20px 0;
-            border-radius: 6px;
-        }
-        .card h3 { margin: 0 0 8px 0; font-size: 16px; font-weight: 600; color: #ffffff; }
-        
-        /* 外部拡張機能用リンク（チャットのリンクスタイルに準拠） */
-        .ext-link {
-            color: #b388ff !important;
-            text-decoration: none;
-            font-weight: bold;
-        }
-        .ext-link:hover {
-            color: #d1b3ff !important;
-            text-decoration: underline;
-        }
-
-        /* --- ボタン共通スタイル（button#send と .btn の融合） --- */
-        .btn {
-            display: inline-block;
-            text-align: center;
-            text-decoration: none;
-            padding: 10px 20px; 
-            background-color: #6a1b9a;
-            color: white; 
-            border: none; 
-            border-radius: 6px;
-            cursor: pointer; 
-            font-weight: bold; 
-            font-size: 14px;
-            transition: background-color 0.2s;
-        }
-        .btn:hover { 
-            background-color: #4a148c; 
-        }
-
-        /* --- メタ情報・注意書き（.meta-line と .notice の融合） --- */
-        .notice {
-            font-size: 11px;
-            color: #aaa;
-            margin-top: 12px;
-            line-height: 1.5;
-        }
-
-        /* --- コンポーネントスタイル（.custom-hr） --- */
-        .custom-hr { border: 0; border-top: 1px solid #333; margin: 40px 0 16px 0; }
-		
-		/* --- プロフィールヘッダーの専用スタイル --- */
-		.profile-header {
-			display: flex;
-			align-items: flex-start;
-			gap: 24px; /* 横並びの隙間 */
-			margin-bottom: 30px;
-		}
-		.profile-avatar {
-			border-radius: 50%; /* 完全な丸型にする */
-			border: 2px solid #2d2d2d;
-			background: #121212;
-			object-fit: cover;
-		}
-		.profile-info {
-			flex: 1;
-		}
-		.profile-title {
-			margin: 0 0 6px 0 !important;
-			font-size: 26px;
-			font-weight: 600;
-			color: #ffffff !important;
-			border: none !important; /* 線を消す */
-			padding: 0 !important;
-		}
-		.profile-desc {
-			margin: 0 0 12px 0;
-			font-size: 14px;
-			color: #e0e0e0;
-		}
-		/* アイコン行のスタイル (.meta-line 準拠) */
-		.profile-meta {
-			display: flex;
-			gap: 16px;
-			font-size: 12px;
-			color: #aaa;
-		}
-		.profile-meta svg {
-			vertical-align: text-bottom;
-			margin-right: 4px;
-			color: #aaa; /* アイコンの色 */
-		}
-		.meta-item {
-			display: flex;
-			align-items: center;
-		}
-
-		/* スマホ対応：画面が狭いときは縦並びにする */
-		@media (max-width: 500px) {
-			.profile-header {
-				flex-direction: column;
-				align-items: center;
-				text-align: center;
-				gap: 16px;
-			}
-			.profile-meta {
-				justify-content: center;
-			}
-		}
-    </style>
+    <!-- パスを相対パスにして安全性を高めています -->
+    <link rel="stylesheet" href="assets/style.css">
+    <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
 </head>
 
 <body>
     <div class="container">
-    <div class="profile-header">
-		<div class="profile-avatar-box">
-			<img class="profile-avatar" src="https://raw.githubusercontent.com/nostrurl/base/refs/heads/main/assets/icon.png" width="100" height="100" alt="Nostrurl">
-		</div>
-		
-		<div class="profile-info">
-			<h1 class="profile-title">Nostrurl</h1>
-			<p class="profile-desc">Nostrurlの開発プロジェクト。</p>
-			
-			<div class="profile-meta">
-				<span class="meta-item">
-					<svg viewBox="0 0 16 16" width="16" height="16"><path fill="currentColor" d="M2 5.5a3.5 3.5 0 1 1 5.898 2.549 5.508 5.508 0 0 1 3.034 4.084.75.75 0 1 1-1.482.235 4 4 0 0 0-7.9 0 .75.75 0 0 1-1.482-.236A5.507 5.507 0 0 1 3.102 8.05 3.493 3.493 0 0 1 2 5.5ZM11 4a3.001 3.001 0 0 1 2.22 5.018 5.01 5.01 0 0 1 2.56 3.012.749.749 0 0 1-.885.954.752.752 0 0 1-.549-.514 3.507 3.507 0 0 0-2.522-2.372.75.75 0 0 1-.574-.73v-.352a.75.75 0 0 1 .416-.672A1.5 1.5 0 0 0 11 5.5.75.75 0 0 1 11 4Zm-5.5-.5a2 2 0 1 0-.001 3.999A2 2 0 0 0 5.5 3.5Z"></path></svg>
-					<b style="color: #ffffff;">1</b> developer
-				</span>
-				<span class="meta-item">
-					<svg viewBox="0 0 16 16" width="16" height="16"><path fill="currentColor" d="m12.596 11.596-3.535 3.536a1.5 1.5 0 0 1-2.122 0l-3.535-3.536a6.5 6.5 0 1 1 9.192-9.193 6.5 6.5 0 0 1 0 9.193Zm-1.06-8.132v-.001a5 5 0 1 0-7.072 7.072L8 14.07l3.536-3.534a5 5 0 0 0 0-7.072ZM8 9a2 2 0 1 1-.001-3.999A2 2 0 0 1 8 9Z"></path></svg>
-					Japan
-				</span>
-			</div>
-		</div>
-	</div>
-	
+        <!-- プロフィールヘッダー -->
+        <div class="profile-header">
+            <div class="profile-avatar-box">
+                <img class="profile-avatar" src="https://raw.githubusercontent.com/nostrurl/base/refs/heads/main/assets/icon.png" width="100" height="100" alt="Nostrurl">
+            </div>
+            
+            <div class="profile-info">
+                <h1 class="profile-title">Nostrurl</h1>
+                <p class="profile-desc">Nostrurlの開発プロジェクト。</p>
+                
+                <div class="profile-meta">
+                    <span class="meta-item">
+                        <svg viewBox="0 0 16 16" width="16" height="16"><path fill="currentColor" d="M2 5.5a3.5 3.5 0 1 1 5.898 2.549 5.508 5.508 0 0 1 3.034 4.084.75.75 0 1 1-1.482.235 4 4 0 0 0-7.9 0 .75.75 0 0 1-1.482-.236A5.507 5.507 0 0 1 3.102 8.05 3.493 3.493 0 0 1 2 5.5ZM11 4a3.001 3.001 0 0 1 2.22 5.018 5.01 5.01 0 0 1 2.56 3.012.749.749 0 0 1-.885.954.752.752 0 0 1-.549-.514 3.507 3.507 0 0 0-2.522-2.372.75.75 0 0 1-.574-.73v-.352a.75.75 0 0 1 .416-.672A1.5 1.5 0 0 0 11 5.5.75.75 0 0 1 11 4Zm-5.5-.5a2 2 0 1 0-.001 3.999A2 2 0 0 0 5.5 3.5Z"></path></svg>
+                        <b class="meta-important">1</b>&nbsp;developer
+                    </span>
+                    <span class="meta-item">
+                        <svg viewBox="0 0 16 16" width="16" height="16"><path fill="currentColor" d="m12.596 11.596-3.535 3.536a1.5 1.5 0 0 1-2.122 0l-3.535-3.536a6.5 6.5 0 1 1 9.192-9.193 6.5 6.5 0 0 1 0 9.193Zm-1.06-8.132v-.001a5 5 0 1 0-7.072 7.072L8 14.07l3.536-3.534a5 5 0 0 0 0-7.072ZM8 9a2 2 0 1 1-.001-3.999A2 2 0 0 1 8 9Z"></path></svg>
+                        Japan
+                    </span>
+                </div>
+            </div>
+        </div>
+        
         <p>「Nostrならどこでもコメント欄を配置できるのでは」という興味だけで Nostrurl を作っている実験場です。</p>
 
+        <!-- 成果物の配布 -->
         <h2>成果物の配布</h2>
         <p>ブラウザにTampermonkeyなどのユーザースクリプト管理拡張機能を入れた状態で、以下のボタンを押すとインストールできます。</p>
         <p>ブラウザに <b><a href="https://github.com/fiatjaf/nos2x" target="_blank" class="ext-link">nos2x</a></b> や <b><a href="https://getalby.com/" target="_blank" class="ext-link">Alby</a></b> などのNostr拡張機能（NIP-07形式）が必要です。</p>
 
         <div class="card">
             <h3>1. Nostrurl (ユーザースクリプト - インクルード版)</h3>
-			<p>普通のWebサイトやブログにそっと寄り添う。<br>親ページのスクロールやデザインを壊さないように配慮。</p>
+            <p>普通のWebサイトやブログにそっと寄り添う。<br>親ページのスクロールやデザインを壊さないように配慮。</p>
             <a href="https://raw.githubusercontent.com/nostrurl/base/main/include/nostrurl.user.js" class="btn">スクリプトを導入する ◁</a>
             <div class="notice">⚠️ 強固なセキュリティを持つサイトでは、サイト側の主権を尊重して動作を停止し、案内を表示します。</div>
         </div>
-		
-	<!--    <div class="card">
-        <h3>2. Nostrurl (ユーザースクリプト - インクルージョン版)</h3>
-        <p>すべてを1ファイルに内包。どこでもコメント欄を開きます。</p>
-        <a href="https://raw.githubusercontent.com/nostrurl/base/main/nostrurl_standalone.user.js" class="btn" style="background-color: #586e75;">インクルージョン版を導入する ◁</a>
-        <p class="notice">⚠️ 親ページを独自の空間に包み込むため、元のサイトのJavaScriptやデザインが一部崩れるトレードオフがあります。</p>
-    </div> -->
+        
+        <!-- コメントアウト中のカードもインラインスタイルを整理してあります
+        <div class="card">
+            <h3>2. Nostrurl (ユーザースクリプト - インクルージョン版)</h3>
+            <p>すべてを1ファイルに内包。どこでもコメント欄を開きます。</p>
+            <a href="https://raw.githubusercontent.com/nostrurl/base/main/nostrurl_standalone.user.js" class="btn secondary">インクルージョン版を導入する ◁</a>
+            <div class="notice">⚠️ 親ページを独自の空間に包み込むため、元のサイトのJavaScriptやデザインが一部崩れるトレードオフがあります。</div>
+        </div>
+        -->
 
+        <!-- 使い方 -->
         <h2>使い方</h2>
         <p>導入後、Webサイトを開くと画面右端に紫色のトグルバー 「◁」が出現します。それをクリックすると、そのページ固有のNostrurlがスライドインします。</p>
 
         <div class="custom-hr"></div>
-        <footer style="font-size: 11px; color: #aaa; text-align: center;">
+
+        <!-- フッター -->
+        <footer>
             <p>© 2026 Nostrurl. Powered by Nostr Protocol.</p>
         </footer>
     </div>
-
 </body>
 </html>

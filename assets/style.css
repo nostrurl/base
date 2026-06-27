@@ -1,0 +1,136 @@
+        /* --- チャットアプリの基本設定を完全移植 --- */
+        html, body { 
+            margin: 0; padding: 0;
+            width: 100%; height: 100%;
+            background-color: #1a1a1a; color: #e0e0e0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            overflow-x: hidden; /* インデックス用に縦スクロールは許可 */
+        }
+        * { box-sizing: border-box; }
+
+        /* --- 配布サイト用のコンテナ（最大幅を絞って見やすく） --- */
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+            padding: 60px 16px;
+        }
+
+        /* --- タイトル・見出し（チャットアプリ基準） --- */
+        h1 { margin: 0 0 16px 0; font-size: 28px; font-weight: 600; color: #ffffff; }
+        
+        /* .menu-title 準拠のサブタイトル */
+        h2 { 
+            font-size: 18px; font-weight: bold; color: #b388ff;
+            margin: 40px 0 14px 0; border-bottom: 1px solid #333; padding-bottom: 6px; 
+        }
+        p { font-size: 14px; color: #e0e0e0; line-height: 1.6; }
+
+        /* --- インストール用カード（#manual-view と .gui-control のハイブリッド） --- */
+        .card {
+            background-color: #161616; 
+            border: 1px solid #2d2d2d;
+            padding: 20px; 
+            margin: 20px 0;
+            border-radius: 6px;
+        }
+        .card h3 { margin: 0 0 8px 0; font-size: 16px; font-weight: 600; color: #ffffff; }
+        
+        /* 外部拡張機能用リンク（チャットのリンクスタイルに準拠） */
+        .ext-link {
+            color: #b388ff !important;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .ext-link:hover {
+            color: #d1b3ff !important;
+            text-decoration: underline;
+        }
+
+        /* --- ボタン共通スタイル（button#send と .btn の融合） --- */
+        .btn {
+            display: inline-block;
+            text-align: center;
+            text-decoration: none;
+            padding: 10px 20px; 
+            background-color: #6a1b9a;
+            color: white; 
+            border: none; 
+            border-radius: 6px;
+            cursor: pointer; 
+            font-weight: bold; 
+            font-size: 14px;
+            transition: background-color 0.2s;
+        }
+        .btn:hover { 
+            background-color: #4a148c; 
+        }
+
+        /* --- メタ情報・注意書き（.meta-line と .notice の融合） --- */
+        .notice {
+            font-size: 11px;
+            color: #aaa;
+            margin-top: 12px;
+            line-height: 1.5;
+        }
+
+        /* --- コンポーネントスタイル（.custom-hr） --- */
+        .custom-hr { border: 0; border-top: 1px solid #333; margin: 40px 0 16px 0; }
+		
+		/* --- プロフィールヘッダーの専用スタイル --- */
+		.profile-header {
+			display: flex;
+			align-items: flex-start;
+			gap: 24px; /* 横並びの隙間 */
+			margin-bottom: 30px;
+		}
+		.profile-avatar {
+			border-radius: 50%; /* 完全な丸型にする */
+			border: 2px solid #2d2d2d;
+			background: #121212;
+			object-fit: cover;
+		}
+		.profile-info {
+			flex: 1;
+		}
+		.profile-title {
+			margin: 0 0 6px 0 !important;
+			font-size: 26px;
+			font-weight: 600;
+			color: #ffffff !important;
+			border: none !important; /* 線を消す */
+			padding: 0 !important;
+		}
+		.profile-desc {
+			margin: 0 0 12px 0;
+			font-size: 14px;
+			color: #e0e0e0;
+		}
+		/* アイコン行のスタイル (.meta-line 準拠) */
+		.profile-meta {
+			display: flex;
+			gap: 16px;
+			font-size: 12px;
+			color: #aaa;
+		}
+		.profile-meta svg {
+			vertical-align: text-bottom;
+			margin-right: 4px;
+			color: #aaa; /* アイコンの色 */
+		}
+		.meta-item {
+			display: flex;
+			align-items: center;
+		}
+
+		/* スマホ対応：画面が狭いときは縦並びにする */
+		@media (max-width: 500px) {
+			.profile-header {
+				flex-direction: column;
+				align-items: center;
+				text-align: center;
+				gap: 16px;
+			}
+			.profile-meta {
+				justify-content: center;
+			}
+		}
