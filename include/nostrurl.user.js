@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Nostrurl (ユーザースクリプト版)
 // @namespace    nostrurl.github.io/base/
-// @version      6.6.4
+// @version      6.6.5
 // @description  URLをタグにしたNostrコメント欄を設ける
 // @author       Nostrurl
 // @match        http://*/*
@@ -11,6 +11,8 @@
 // @supportURL   https://github.com/nostrurl/base/issues
 // @run-at       document-end
 // @grant        GM_xmlhttpRequest
+// @grant        GM_setValue
+// @grant        GM_getValue
 // @connect      raw.githubusercontent.com
 // ==/UserScript==
 
@@ -20,7 +22,7 @@
 
     const GITHUB_RAW_HTML_URL = "https://raw.githubusercontent.com/nostrurl/base/main/include/chat.html";
     const GITHUB_RAW_CSS_URL = "https://raw.githubusercontent.com/nostrurl/base/main/include/chat.css";
-    const GITHUB_RAW_FILTER_JS_URL = "https://raw.githubusercontent.com/nostrurl/base/main/include/domain-filter.js"; // ✨ 追加
+    const GITHUB_RAW_FILTER_JS_URL = "https://raw.githubusercontent.com/nostrurl/base/main/include/domain-filter.js"; 
     const GITHUB_RAW_JS_URL = "https://raw.githubusercontent.com/nostrurl/base/main/include/chat.js";
     const GITHUB_RAW_PURGE_URL = "https://raw.githubusercontent.com/nostrurl/base/main/include/purge.txt";
 
@@ -49,10 +51,11 @@
         window.addEventListener('DOMContentLoaded', setupParallelUI);
     }
 
-    // ─── フィルター判定ロジック ───
+	// 4. フィルター判定ロジック
     function shouldBlockByFilter() {
         try {
-            const saved = localStorage.getItem('nostrurl_config');
+            // ✨ 修正：localStorage ではなく GM_getValue から全サイト共通の設定を読み込む
+            const saved = GM_getValue('nostrurl_global_config');
             if (!saved) return false;
 
             const config = JSON.parse(saved);
@@ -75,9 +78,13 @@
         if (isListenerRegistered) return; // 既に登録されていればスキップ
         isListenerRegistered = true;
 
-        window.addEventListener('message', (event) => {
+		window.addEventListener('message', (event) => {
             if (event.data && event.data.type === 'NOSTRURL_FILTER_UPDATE') {
                 const { filterMode, filterDomains } = event.data;
+
+                // ✨ 修正：メッセージを受け取ったら、即座に全サイト共通ストレージ（GM_setValue）に保存する
+                const newConfig = { FILTER_MODE: filterMode, FILTER_DOMAINS: filterDomains };
+                GM_setValue('nostrurl_global_config', JSON.stringify(newConfig));
                 
                 let currentShouldBlock = false;
                 if (filterMode === 'whitelist') {
