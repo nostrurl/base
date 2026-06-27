@@ -134,3 +134,21 @@
 				justify-content: center;
 			}
 		}
+		
+/* --- 事前準備エリア全体 --- */
+.setup-container {
+    margin-left: 16px;
+    margin-bottom: 24px;
+}
+
+/* 内側の紫線のついたステップ部分 */
+.setup-block {
+    padding-left: 16px;
+    border-left: 3px solid #6a1b9a;
+    margin-top: 12px;
+}
+
+/* 各ステップの行間微調整 */
+.setup-block p {
+    margin: 6px 0;
+}
