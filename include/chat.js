@@ -338,38 +338,60 @@ const executeSubmit = async () => {
 // --- 7. 初期化とイベントリスナー設定 ---
 startPublicKeyMonitor();
 
-menuBtn.onclick = () => {
-    isManualMode = !isManualMode;
-    manualBox.classList.toggle('show-element', isManualMode);
-    manualBox.classList.toggle('hide-element', !isManualMode);
-    commentBox.classList.toggle('hide-element', isManualMode);
-    menuBtn.innerText = isManualMode ? '💬' : '⚙️';
-    if (!isManualMode) renderComments();
-};
+// セキュリティ（CSP）対策: onclickではなくaddEventListenerを使用
+if (menuBtn) {
+    menuBtn.addEventListener('click', () => {
+        isManualMode = !isManualMode;
+        manualBox.classList.toggle('show-element', isManualMode);
+        manualBox.classList.toggle('hide-element', !isManualMode);
+        commentBox.classList.toggle('hide-element', isManualMode);
+        menuBtn.innerText = isManualMode ? '💬' : '⚙️';
+        if (!isManualMode) renderComments();
+    });
+}
 
-guiMode.onchange = () => { currentConfig.ROOM_MODE = guiMode.value; saveConfig(currentConfig); handleRoomChange(); };
-guiRoomName.oninput = () => { currentConfig.CUSTOM_ROOM_NAME = guiRoomName.value.trim(); saveConfig(currentConfig); clearTimeout(roomChangeTimeout); roomChangeTimeout = setTimeout(handleRoomChange, 300); };
-guiRelayAddBtn.onclick = () => {
-    const url = guiRelayInput.value.trim();
-    if (url && url.startsWith('wss://') && !currentConfig.RELAY_URLS.includes(url)) {
-        currentConfig.RELAY_URLS.push(url); saveConfig(currentConfig); renderGuiRelayList(); connectToRelay(url);
-    }
-};
+// セキュリティ（CSP）対策: onchangeではなくaddEventListenerを使用
+if (guiMode) {
+    guiMode.addEventListener('change', () => {
+        currentConfig.ROOM_MODE = guiMode.value;
+        saveConfig(currentConfig);
+        handleRoomChange();
+    });
+}
 
-sendBtn.onclick = executeSubmit;
-inputArea.onkeydown = (e) => { if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') executeSubmit(); };
+// セキュリティ（CSP）対策: oninputではなくaddEventListenerを使用
+if (guiRoomName) {
+    guiRoomName.addEventListener('input', () => {
+        currentConfig.CUSTOM_ROOM_NAME = guiRoomName.value.trim();
+        saveConfig(currentConfig);
+        clearTimeout(roomChangeTimeout);
+        roomChangeTimeout = setTimeout(handleRoomChange, 300);
+    });
+}
 
+// セキュリティ（CSP）対策: 削除ボタンと同様に、追加ボタンもaddEventListenerへ
+if (guiRelayAddBtn) {
+    guiRelayAddBtn.addEventListener('click', () => {
+        const url = guiRelayInput.value.trim();
+        if (url && url.startsWith('wss://') && !currentConfig.RELAY_URLS.includes(url)) {
+            currentConfig.RELAY_URLS.push(url);
+            saveConfig(currentConfig);
+            renderGuiRelayList();
+            connectToRelay(url);
+        }
+    });
+}
+
+if (sendBtn) {
+    sendBtn.addEventListener('click', executeSubmit);
+}
+
+if (inputArea) {
+    inputArea.addEventListener('keydown', (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') executeSubmit();
+    });
+}
+
+// 初期接続の開始
 currentConfig.RELAY_URLS.forEach(url => connectToRelay(url));
 renderGuiRelayList();
-
-// --- デバッグ用 ---
-window.debugNostr = {
-    listSockets: () => {
-        sockets.forEach((ws, url) => {
-            console.log(`URL: ${url}, 状態: ${ws.readyState === 1 ? 'OPEN' : 'CLOSED'}`);
-        });
-    },
-    reconnectAll: () => {
-        currentConfig.RELAY_URLS.forEach(url => connectToRelay(url));
-    }
-};
