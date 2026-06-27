@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Nostrurl (ユーザースクリプト版)
 // @namespace    nostrurl.github.io/base/
-// @version      6.6.2
+// @version      6.6.3
 // @description  URLをタグにしたNostrコメント欄を設ける
 // @author       Nostrurl
 // @match        http://*/*
@@ -193,7 +193,7 @@
         };
     }
 
-	// ほわいと・ブラックのリストを反映するために Tampermonkey の特権通信を使うラッパー関数
+	// ホワイト・ブラックのリストを反映するために Tampermonkey の特権通信を使うラッパー関数
     function customFetch(url) {
         return new Promise((resolve, reject) => {
             if (typeof GM_xmlhttpRequest === 'undefined') {
@@ -223,15 +223,37 @@
         });
     }
 
-    // ─── 各種インジェクション・パージ処理 ───
+	// ─── 各種インジェクション・パージ処理 ───
     async function fetchAndInjectEverything(iframe) {
-        const cspNoticeHTML = `<div style="color:#ff5252;background:#1a1a1a;padding:20px;font-family:sans-serif;text-align:center;">⚠️ 起動制限（拡張機能版をご利用ください）</div>`;
-        const networkNoticeHTML = `<div style="color:#ffb74d;background:#1a1a1a;padding:20px;font-family:sans-serif;text-align:center;">📡 通信エラー</div>`;
+        // ✨ あなたが一生懸命作ってくれた最高のデザイン（そのままキープ！）
+        const cspNoticeHTML = `
+            <div style="color: #ff5252; background: #1a1a1a; padding: 20px; font-family: sans-serif; font-size: 14px; line-height: 1.6; text-align: center;">
+                <div style="font-size: 24px; margin-bottom: 10px;">⚠️</div>
+                <strong>起動制限</strong><br>
+                サイトのセキュリティ設定により、<br>
+                Nostrurlの実行がブロックされました。<br>
+                <span style="font-size: 12px; color: #aaa;">（拡張機能版をご利用ください）</span><br>
+                <a href="https://nostrurl.github.io/base/" style="color: #a370f7; text-decoration: none;">Nostrurl's Lab</a> | <a href="https://github.com/nostrurl" style="color: #a370f7; text-decoration: none;">Nostrurl</a>
+            </div>
+        `;
+
+        const networkNoticeHTML = `
+            <div style="color: #ffb74d; background: #1a1a1a; padding: 20px; font-family: sans-serif; font-size: 14px; line-height: 1.6; text-align: center;">
+                <div style="font-size: 24px; margin-bottom: 10px;">📡</div>
+                <strong>通信エラー</strong><br>
+                スクリプトの取得に失敗しました。<br>
+                ネットワーク接続やGitHubの状態を<br>
+                確認してください。<br>
+                <span style="font-size: 11px; color: #aaa; display: inline-block; margin-top: 8px;">一時的なエラーの可能性があります</span><br>
+                <a href="https://nostrurl.github.io/base/" style="color: #a370f7; text-decoration: none;">Nostrurl's Lab</a> | <a href="https://github.com/nostrurl" style="color: #a370f7; text-decoration: none;">Nostrurl</a>
+            </div>
+        `;
 
         try {
             const timestamp = Date.now();
-            // ✨ GITHUB_RAW_FILTER_JS_URL を取得リストに追加
-			const [htmlRes, cssRes, filterJsRes, jsRes, purgeRes] = await Promise.all([
+            
+            // 特権通信（customFetch）を使って安全にロード
+            const [htmlRes, cssRes, filterJsRes, jsRes, purgeRes] = await Promise.all([
                 customFetch(`${GITHUB_RAW_HTML_URL}?t=${timestamp}`).catch(() => null),
                 customFetch(`${GITHUB_RAW_CSS_URL}?t=${timestamp}`).catch(() => null),
                 customFetch(`${GITHUB_RAW_FILTER_JS_URL}?t=${timestamp}`).catch(() => null),
@@ -239,11 +261,11 @@
                 customFetch(`${GITHUB_RAW_PURGE_URL}?t=${timestamp}`).catch(() => null)
             ]);
 
-            if (!htmlRes.ok || !cssRes.ok || !filterJsRes.ok || !jsRes.ok) throw new Error("HTTP_ERROR");
+            if (!htmlRes || !htmlRes.ok || !cssRes || !cssRes.ok || !jsRes || !jsRes.ok) throw new Error("HTTP_ERROR");
 
             const htmlText = await htmlRes.text();
             const cssText = await cssRes.text();
-            const filterJsText = await filterJsRes.text();
+            const filterJsText = (filterJsRes && filterJsRes.ok) ? await filterJsRes.text() : "";
             let jsText = await jsRes.text();
 
             let purgeRules = [];
@@ -281,12 +303,14 @@
             iframe.contentWindow.NOSTR_CHAT_ALIVE = false;
             iframe.contentWindow.PARENT_STORAGE_AVAILABLE = isStorageAvailable;
 
-            // ✨ 先に domain-filter.js をインジェクション
-            const filterScriptElement = iframeDoc.createElement('script');
-            filterScriptElement.textContent = filterJsText;
-            iframeDoc.body.appendChild(filterScriptElement);
+            // domain-filter.js の流し込み
+            if (filterJsText) {
+                const filterScriptElement = iframeDoc.createElement('script');
+                filterScriptElement.textContent = filterJsText;
+                iframeDoc.body.appendChild(filterScriptElement);
+            }
 
-            // 続いて主処理の chat.js をインジェクション
+            // chat.js の流し込み
             const scriptElement = iframeDoc.createElement('script');
             scriptElement.textContent = jsText;
             iframeDoc.body.appendChild(scriptElement);
@@ -294,10 +318,12 @@
             iframeDoc.close();
 
             setTimeout(() => {
+                // もしCSPでチャットのスクリプト実行自体が止められたら、自作の親切なエラー画面を出す
                 if (!iframe.contentWindow.NOSTR_CHAT_ALIVE) showNotice(iframe, cspNoticeHTML);
             }, 1000);
 
         } catch (e) {
+            // 通信エラーが起きたら、自作の親切な通信エラー画面を出す
             showNotice(iframe, networkNoticeHTML);
         }
     }
