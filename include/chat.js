@@ -1,5 +1,5 @@
 // =================================================================
-// ✨ Tampermonkey / 同一ドメインiframe対応のためのポリフィル（最終完全版）
+// ✨ Tampermonkey / 同一ドメインiframe対応のためのポリフィル
 // =================================================================
 
 // 動作確認
@@ -232,17 +232,61 @@ function connectToRelay(url) {
 
 function renderComments() {
     if (isManualMode) return;
-    if (commentList.length === 0) { commentBox.innerHTML = '<div style="color:#aaa; text-align:center; margin-top:20px;">まだコメントがありません</div>'; return; }
+    if (commentList.length === 0) { 
+        commentBox.innerHTML = '<div style="color:#aaa; text-align:center; margin-top:20px;">まだコメントがありません</div>'; 
+        return; 
+    }
     
     commentList.sort((a, b) => a.created_at - b.created_at);
-    
     const pad = (n) => String(n).padStart(2, '0');
     
+    // HTML組み立て（クラス名などを少し調整しています）
     commentBox.innerHTML = commentList.map(ev => {
         const date = new Date(ev.created_at * 1000);
         const timeStr = `${String(date.getFullYear()).slice(-2)}/${pad(date.getMonth()+1)}/${pad(date.getDate())}  ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
-        return `<div class="msg-row"><div class="msg-header"><strong style="color: #b388ff;">${ev.pubkey.substring(0,8)}:</strong><span class="msg-time">${timeStr}</span></div><div class="msg-content">${escapeHtml(ev.content)}</div></div>`;
+        
+        return `
+            <div class="msg-row">
+                <div class="msg-header">
+                    <strong style="color: #b388ff;">${ev.pubkey.substring(0,8)}:</strong>
+                    <span class="msg-time">${timeStr}</span>
+                </div>
+                <!-- ラッパーで包む -->
+                <div class="msg-content-wrap">
+                    <div class="msg-content">${escapeHtml(ev.content)}</div>
+                </div>
+                <!-- ボタン用のプレースホルダー -->
+                <div class="msg-action-bar"></div>
+            </div>`;
     }).join('');
+
+    // --- ここからアコーディオンの動的判定ロジック ---
+    const rows = commentBox.querySelectorAll('.msg-row');
+    rows.forEach(row => {
+        const wrap = row.querySelector('.msg-content-wrap');
+        const content = row.querySelector('.msg-content');
+        const actionBar = row.querySelector('.msg-action-bar');
+        
+        // 実際のコンテンツの高さが 120px を超えているか判定
+        if (content.scrollHeight > 120) {
+            wrap.classList.add('is-clamped'); // フェード用のクラス
+            
+            // ボタンを生成して配置
+            const btn = document.createElement('button');
+            btn.className = 'read-more-btn';
+            btn.innerText = '▼ 続きを読む';
+            
+            btn.onclick = () => {
+                const isOpen = wrap.classList.toggle('is-expanded');
+                wrap.classList.toggle('is-clamped', !isOpen);
+                btn.innerText = isOpen ? '▲ 折りたたむ' : '▼ 続きを読む';
+            };
+            
+            actionBar.appendChild(btn);
+        }
+    });
+    // ---------------------------------------------
+
     commentBox.scrollTop = commentBox.scrollHeight;
 }
 

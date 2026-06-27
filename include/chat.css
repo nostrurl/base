@@ -188,3 +188,48 @@ button#send {
     user-select: none;
     line-height: 1;
 }
+
+/* --- 長文アコーディオン用スタイル --- */
+.msg-content-wrap {
+    position: relative;
+    max-height: 120px; /* 折りたたむ高さ（お好みで調整してください） */
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+}
+
+/* 展開時は高さを制限しない */
+.msg-content-wrap.is-expanded {
+    max-height: none;
+}
+
+/* 折りたたまれている時だけのグラデーションフェード */
+.msg-content-wrap.is-clamped::after {
+    content: "";
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 40px;
+    background: linear-gradient(transparent, #121212); /* #121212は#commentsの背景色 */
+    pointer-events: none;
+}
+.msg-content-wrap.is-expanded::after {
+    display: none;
+}
+
+/* 「続きを読む」ボタン */
+.read-more-btn {
+    display: block;
+    background: none;
+    border: none;
+    color: #b388ff;
+    font-size: 11px;
+    font-weight: bold;
+    cursor: pointer;
+    padding: 4px 0;
+    margin-top: 2px;
+    text-align: left;
+    user-select: none;
+}
+.read-more-btn:hover {
+    color: #d1b3ff;
+    text-decoration: underline;
+}
