@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Nostrurl (ユーザースクリプト版)
 // @namespace    nostrurl.github.io/base/
-// @version      6.3.1
+// @version      6.32
 // @description  URLをタグにしたNostrコメント欄を設ける
 // @author       Nostrurl
 // @match        http://*/*
@@ -69,8 +69,8 @@
         `;
 
 		// 権限を与える
-        commentIframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-forms');
-        commentIframe.setAttribute('allow', 'cross-origin-isolated');
+        //commentIframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-forms');
+		commentIframe.setAttribute('allow', 'cross-origin-isolated');
         commentIframe.name = 'nostr-comment-frame';
 
         targetBody.appendChild(commentIframe);
@@ -79,7 +79,8 @@
         let isOpen = false;
         let isInitialized = false;
 
-        toggleBar.onclick = async () => {
+// ★ 修正後：onclick から「async」を外します
+        toggleBar.onclick = () => {
             isOpen = !isOpen;
             if (isOpen) {
                 toggleBar.innerText = '▷';
@@ -92,7 +93,8 @@
 
                 if (!isInitialized) {
                     isInitialized = true;
-                    await loadIframeViaPages(commentIframe);
+                    // await を使わず、普通に呼び出す
+                    loadIframeViaPages(commentIframe);
                 }
             } else {
                 toggleBar.innerText = '◁';
@@ -104,16 +106,19 @@
         };
     }
 
-    async function loadIframeViaPages(iframe) {
+    // ★ 修正後：こちらも「async」を外し、fetchの部分を .then() に変更します
+    function loadIframeViaPages(iframe) {
         let cleanUrl = window.location.href;
 
-        // ─── purge.txt からクレンジング用リストを生成（ここだけ親サイト側で一度処理） ───
-        try {
-            const timestamp = Date.now();
-            const purgeRes = await fetch(`${GITHUB_RAW_PURGE_URL}?t=${timestamp}`).catch(() => null);
-            
-            if (purgeRes && purgeRes.ok) {
-                const purgeText = await purgeRes.text();
+        const timestamp = Date.now();
+        fetch(`${GITHUB_RAW_PURGE_URL}?t=${timestamp}`)
+            .then(purgeRes => {
+                if (purgeRes && purgeRes.ok) {
+                    return purgeRes.text();
+                }
+                throw new Error("fetch failed");
+            })
+            .then(purgeText => {
                 const purgeRules = purgeText.split('\n')
                     .map(line => line.trim().replace(/\r$/, ''))
                     .filter(line => line && !line.startsWith('#'));
@@ -134,14 +139,14 @@
                     }
                 }
                 cleanUrl = targetUrl.toString();
-            }
-        } catch (e) {
-            console.warn("[Nostrurl] purge.txt の取得または解析に失敗しました。元のURLを使用します:", e);
-        }
-
-        // ─── GitHub Pages の URL にクレンジング済みのURLをパラメータとして付与して src に代入 ───
-        const finalSrc = `${PAGES_CHAT_URL}?parentUrl=${encodeURIComponent(cleanUrl)}`;
-        iframe.src = finalSrc;
-        console.log("[Nostrurl] GitHub Pages経由でiframeを読み込みました:", finalSrc);
+            })
+            .catch(e => {
+                console.warn("[Nostrurl] purge.txt の取得に失敗したか、スキップしました。元のURLを使用します:", e);
+            })
+            .finally(() => {
+                // 最後に必ず src を代入して iframe を読み込ませる
+                const finalSrc = `${PAGES_CHAT_URL}?parentUrl=${encodeURIComponent(cleanUrl)}`;
+                iframe.src = finalSrc;
+                console.log("[Nostrurl] GitHub Pages経由でiframeを読み込みました:", finalSrc);
+            });
     }
-})();
