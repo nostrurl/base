@@ -12,6 +12,9 @@
 
 # Googleのキャッシュ無効化用
 zx
+ictx
+sa
+ved
 
 # トラッキング広告系
 fbclid
