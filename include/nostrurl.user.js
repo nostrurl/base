@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Nostrurl (ユーザースクリプト版)
 // @namespace    nostrurl.github.io/base/
-// @version      6.4.1
+// @version      6.4.2
 // @description  URLをタグにしたNostrコメント欄を設ける
 // @author       Nostrurl
 // @match        http://*/*
@@ -121,8 +121,8 @@
                 スクリプトの取得に失敗しました。<br>
                 ネットワーク接続やGitHubの状態を<br>
                 確認してください。<br>
-                <span style="font-size: 11px; color: #aaa; display: inline-block; margin-top: 8px;">一時的なエラーの可能性があります</span>
-				<a href="https://nostrurl.github.io/base/">Nostrurl's Lab</a> | <a href="https://github.com/nostrurl">Nostrurl</a>
+                <span style="font-size: 11px; color: #aaa; display: inline-block; margin-top: 8px;">一時的なエラーの可能性があります</span><br>
+				<a href="https://nostrurl.github.io/base/" style="color: #a370f7; text-decoration: none;">Nostrurl's Lab</a> | <a href="https://github.com/nostrurl" style="color: #a370f7; text-decoration: none;">Nostrurl</a>
             </div>
         `;
 
