@@ -72,8 +72,8 @@ function updateFilterToggleBtn(config, currentDomain, elements) {
     }
 }
 
-// グローバルスコープ（または別ファイル）から呼べるようにエクスポート（必要に応じてwindowオブジェクトに紐付け）
-window.NostrDomainFilter = {
+// chat.js が求めている「NostrFilterManager」という名前でグローバルに公開する
+window.NostrFilterManager = {
     extractDomain,
     renderGuiFilterList,
     updateFilterToggleBtn
