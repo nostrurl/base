@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Nostrurl (ユーザースクリプト版)
 // @namespace    nostrurl.github.io/base/
-// @version      6.32
+// @version      6.3.3
 // @description  URLをタグにしたNostrコメント欄を設ける
 // @author       Nostrurl
 // @match        http://*/*
@@ -25,7 +25,7 @@
         window.addEventListener('DOMContentLoaded', setupParallelUI);
     }
 
-    async function setupParallelUI() {
+    function setupParallelUI() {
         const targetBody = document.body;
 
         const toggleBar = document.createElement('div');
@@ -79,7 +79,7 @@
         let isOpen = false;
         let isInitialized = false;
 
-// ★ 修正後：onclick から「async」を外します
+	// ★ 修正後：onclick から「async」を外します
         toggleBar.onclick = () => {
             isOpen = !isOpen;
             if (isOpen) {
@@ -150,3 +150,4 @@
                 console.log("[Nostrurl] GitHub Pages経由でiframeを読み込みました:", finalSrc);
             });
     }
+})();
