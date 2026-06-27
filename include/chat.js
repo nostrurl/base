@@ -72,22 +72,26 @@ const DEFAULT_CONFIG = {
 
 // --- 2. 関数定義 ---
 function loadConfig() {
-    const saved = localStorage.getItem('nostrurl_config');
     const defaultCopy = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
-    if (saved) {
-        try {
+    try {
+        const saved = localStorage.getItem('nostrurl_config');
+        if (saved) {
             const parsed = JSON.parse(saved);
             return { ...defaultCopy, ...parsed };
-        } catch (e) { 
-            console.error("Config parse error:", e); 
-            return defaultCopy;
         }
+    } catch (e) { 
+        console.warn("[Nostrurl] localStorageへのアクセスが制限されています。デフォルト設定で動作します:", e); 
+        return defaultCopy;
     }
     return defaultCopy;
 }
 
 function saveConfig(config) {
-    localStorage.setItem('nostrurl_config', JSON.stringify(config));
+    try {
+        localStorage.setItem('nostrurl_config', JSON.stringify(config));
+    } catch (e) {
+        console.error("[Nostrurl] 設定の保存に失敗しました（ブラウザのセキュリティ制限等）:", e);
+    }
 }
 
 function generateTargetKey(url, config) {
