@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Nostrurl (ユーザースクリプト版)
 // @namespace    nostrurl.github.io/base/
-// @version      6.2.12
+// @version      6.2.13
 // @description  URLをタグにしたNostrコメント欄を設ける
 // @author       Nostrurl
 // @match        http://*/*
@@ -15,9 +15,11 @@
     'use strict';
     if (window.top !== window.self) return;
 
-	const GITHUB_RAW_HTML_URL = "https://raw.githubusercontent.com/nostrurl/base/main/include/chat.html";
-	const GITHUB_RAW_CSS_URL = "https://raw.githubusercontent.com/nostrurl/base/main/include/chat.css";
-	const GITHUB_RAW_JS_URL = "https://raw.githubusercontent.com/nostrurl/base/main/include/chat.js";
+    const GITHUB_RAW_HTML_URL = "https://raw.githubusercontent.com/nostrurl/base/main/include/chat.html";
+    const GITHUB_RAW_CSS_URL = "https://raw.githubusercontent.com/nostrurl/base/main/include/chat.css";
+    const GITHUB_RAW_JS_URL = "https://raw.githubusercontent.com/nostrurl/base/main/include/chat.js";
+    // ★ 外部のブラックリストファイルのURL（環境に合わせてパスは調整してください）
+    const GITHUB_RAW_PURGE_URL = "https://raw.githubusercontent.com/nostrurl/base/main/include/purge.txt";
 
     if (document.body) {
         setupParallelUI();
@@ -99,8 +101,7 @@
         };
     }
 
-	async function fetchAndInjectEverything(iframe) {
-        // --- 1. 原因ごとのHTMLテンプレートを定義 ---
+    async function fetchAndInjectEverything(iframe) {
         const cspNoticeHTML = `
             <div style="color: #ff5252; background: #1a1a1a; padding: 20px; font-family: sans-serif; font-size: 14px; line-height: 1.6; text-align: center;">
                 <div style="font-size: 24px; margin-bottom: 10px;">⚠️</div>
@@ -124,38 +125,65 @@
 
         try {
             const timestamp = Date.now();
-            const [htmlRes, cssRes, jsRes] = await Promise.all([
+            // ★ purgeRes を追加して、4つのファイルを同時に超高速ダウンロード
+            const [htmlRes, cssRes, jsRes, purgeRes] = await Promise.all([
                 fetch(`${GITHUB_RAW_HTML_URL}?t=${timestamp}`),
-				fetch(`${GITHUB_RAW_CSS_URL}?t=${timestamp}`),
-                fetch(`${GITHUB_RAW_JS_URL}?t=${timestamp}`)
+                fetch(`${GITHUB_RAW_CSS_URL}?t=${timestamp}`),
+                fetch(`${GITHUB_RAW_JS_URL}?t=${timestamp}`),
+                fetch(`${GITHUB_RAW_PURGE_URL}?t=${timestamp}`).catch(() => null) // purge.txtが無くても最悪起動はできるようにエラー逃げ道を用意
             ]);
 
-            // 404や500エラーなどのHTTPエラーはここでキャッチしてネットワークエラー側へ
             if (!htmlRes.ok || !cssRes.ok || !jsRes.ok) {
                 throw new Error("HTTP_ERROR");
             }
 
             const htmlText = await htmlRes.text();
-			const cssText = await cssRes.text();
+            const cssText = await cssRes.text();
             const jsText = await jsRes.text();
+
+            // ─── purge.txt からクレンジング用リストを生成 ───
+            let purgeRules = [];
+            if (purgeRes && purgeRes.ok) {
+                const purgeText = await purgeRes.text();
+                purgeRules = purgeText.split('\n')
+                    .map(line => line.trim())
+                    .filter(line => line && !line.startsWith('#')); // 空行とコメントを除外
+            }
+
+            // ─── URLのクレンジング処理 ───
+            const cleanUrl = new URL(window.location.href);
+            const currentKeys = [...cleanUrl.searchParams.keys()];
+
+            for (const key of currentKeys) {
+                const shouldDelete = purgeRules.some(rule => {
+                    if (rule.endsWith('*')) {
+                        // 「utm_*」のような前方一致ルール（「*」を除いた部分で始まるかチェック）
+                        return key.startsWith(rule.slice(0, -1));
+                    }
+                    // 通常の完全一致ルール
+                    return key === rule;
+                });
+
+                if (shouldDelete) {
+                    cleanUrl.searchParams.delete(key);
+                }
+            }
+            // ──────────────────────────────
 
             const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
             iframeDoc.open();
             iframeDoc.write(htmlText);
 
-			// GitHubから取得したCSSを <style> タグとして注入
-			const styleElement = iframeDoc.createElement('style');
-			styleElement.textContent = cssText;
-			iframeDoc.head.appendChild(styleElement);
+            const styleElement = iframeDoc.createElement('style');
+            styleElement.textContent = cssText;
+            iframeDoc.head.appendChild(styleElement);
 
-			// メタデータからバージョンを動的に注入
-			const versionElement = iframeDoc.querySelector('.version-info');
-			if (versionElement) {
-				// スクリプト自体のバージョンを流し込む
-				versionElement.innerText = typeof GM_info !== 'undefined' ? `v${GM_info.script.version}` : '不正なバージョン';
-			}
+            const versionElement = iframeDoc.querySelector('.version-info');
+            if (versionElement) {
+                versionElement.innerText = typeof GM_info !== 'undefined' ? `v${GM_info.script.version}` : '不正なバージョン';
+            }
 
-            iframe.contentWindow.REAL_PARENT_URL = window.location.href;
+            iframe.contentWindow.REAL_PARENT_URL = cleanUrl.toString();
             iframe.contentWindow.NOSTR_CHAT_ALIVE = false;
 
             const scriptElement = iframeDoc.createElement('script');
@@ -165,7 +193,6 @@
 
             console.log("[Nostrurl] インクルード処理完了（生存確認開始）");
 
-            // 1秒後のチェックで動いていなければ、それは「通信は成功したのにJSが動かない＝CSP制限」と確定
             setTimeout(() => {
                 if (!iframe.contentWindow.NOSTR_CHAT_ALIVE) {
                     console.warn("[Nostrurl] スクリプトの実行拒否（CSP）を検知しました。");
@@ -174,13 +201,11 @@
             }, 1000);
 
         } catch (e) {
-            // catchに来たものは通信遮断や404エラーなので、ネットワークエラーを表示
             console.warn("[Nostrurl] 通信エラーまたは取得失敗を検知しました:", e.message);
             showNotice(iframe, networkNoticeHTML);
         }
     }
 
-    // メッセージ書き換え用の共通関数
     function showNotice(iframe, html) {
         try {
             const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
