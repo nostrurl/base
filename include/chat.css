@@ -244,6 +244,8 @@ button#send {
     padding: 8px;
     cursor: pointer;
     font-weight: bold;
+    background-color: #2a2a2a !important; /* 初期状態（判定中）は目に優しいダークグレー */
+    color: #888 !important;              /* 文字も眩しくないグレー */
     transition: background 0.2s, color 0.2s;
 }
 
