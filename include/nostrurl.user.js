@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Nostrurl (ユーザースクリプト版)
 // @namespace    nostrurl.github.io/base/
-// @version      6.4.2
+// @version      6.5.0
 // @description  URLをタグにしたNostrコメント欄を設ける
 // @author       Nostrurl
 // @match        http://*/*
@@ -22,13 +22,117 @@
     const GITHUB_RAW_JS_URL = "https://raw.githubusercontent.com/nostrurl/base/main/include/chat.js";
     const GITHUB_RAW_PURGE_URL = "https://raw.githubusercontent.com/nostrurl/base/main/include/purge.txt";
 
+    // ─── グローバルUI参照用の変数（イベントリスナーからも制御できるように外出し） ───
+    let globalToggleBar = null;
+    let globalCommentIframe = null;
+    let isOpen = false;
+    let isInitialized = false;
+
+    // 現在のサイトのドメイン（ホスト名）を取得
+    const currentDomain = window.location.hostname.toLowerCase();
+
+    // =================================================================
+    // 🛡️ 初期判定：このドメインでUIを表示すべきかどうかをチェック
+    // =================================================================
+    if (shouldBlockByFilter()) {
+        console.log(`[Nostrurl] フィルター設定に基づき、このドメイン (${currentDomain}) では起動をスキップします。`);
+        // メッセージリスナーだけは登録しておく（後から設定が変わる可能性があるため）
+        listenToFilterUpdate();
+        return; 
+    }
+
+    // 起動OKならUIをセットアップ
     if (document.body) {
         setupParallelUI();
     } else {
         window.addEventListener('DOMContentLoaded', setupParallelUI);
     }
 
+    // フィルター設定をlocalStorageからパースしてブロック判定を行う関数
+    function shouldBlockByFilter() {
+        try {
+            const saved = localStorage.getItem('nostrurl_config');
+            if (!saved) return false; // 設定がなければ制限なし
+
+            const config = JSON.parse(saved);
+            const mode = config.FILTER_MODE || 'off';
+            const domains = config.FILTER_DOMAINS || [];
+
+            if (mode === 'whitelist') {
+                // ホワイトリスト：登録されて「いない」ならブロック
+                return !domains.includes(currentDomain);
+            } else if (mode === 'blacklist') {
+                // ブラックリスト：登録されて「いる」ならブロック
+                return domains.includes(currentDomain);
+            }
+        } catch (e) {
+            console.error("[Nostrurl] フィルター設定の読み込みに失敗しました:", e);
+        }
+        return false;
+    }
+
+    // =================================================================
+    // 📡 子(iframe)からの設定更新メッセージを待ち受けるリスナー
+    // =================================================================
+    function listenToFilterUpdate() {
+        window.addEventListener('message', (event) => {
+            if (event.data && event.data.type === 'NOSTRURL_FILTER_UPDATE') {
+                const { filterMode, filterDomains } = event.data;
+                console.log("[Nostrurl] フィルター設定のリアルタイム更新を受信しました:", filterMode);
+
+                // メッセージを元に、このサイトが非表示対象になったかを再計算
+                let currentShouldBlock = false;
+                if (filterMode === 'whitelist') {
+                    currentShouldBlock = !filterDomains.includes(currentDomain);
+                } else if (filterMode === 'blacklist') {
+                    currentShouldBlock = filterDomains.includes(currentDomain);
+                }
+
+                // ブロック対象になった場合
+                if (currentShouldBlock) {
+                    // もしUIが既に生成されているなら、画面から跡形もなく消し去る（または強制的に閉じる）
+                    if (isOpen) {
+                        closeSidebar();
+                    }
+                    if (globalToggleBar) globalToggleBar.style.display = 'none';
+                    if (globalCommentIframe) globalCommentIframe.style.display = 'none';
+                    console.log(`[Nostrurl] 設定変更により、このサイト (${currentDomain}) は対象外となりました。UIを非表示にします。`);
+                } else {
+                    // ブロック解除された（表示対象になった）場合
+                    if (!globalToggleBar) {
+                        // 最初に読み込まれずUIが存在しない場合はセットアップを実行
+                        setupParallelUI();
+                    } else {
+                        // 既にUIが存在して隠されていた場合は再表示
+                        globalToggleBar.style.display = 'flex';
+                        globalCommentIframe.style.display = 'block';
+                    }
+                }
+            }
+        });
+    }
+
+    // サイドバーを安全に閉じて親画面のレイアウトを戻すヘルパー関数
+    function closeSidebar() {
+        isOpen = false;
+        if (globalToggleBar) {
+            globalToggleBar.innerText = '◁';
+            globalToggleBar.style.setProperty('transform', 'translateX(0px)', 'important');
+        }
+        if (globalCommentIframe) {
+            globalCommentIframe.style.setProperty('transform', 'translateX(350px)', 'important');
+        }
+        document.documentElement.style.setProperty('margin-right', '0px', 'important');
+        document.documentElement.style.setProperty('width', '100%', 'important');
+    }
+
+    // =================================================================
+    // 🏗️ メインのUI構築
+    // =================================================================
     async function setupParallelUI() {
+        // 多重生成防止
+        if (document.getElementById('nostr-toggle-bar')) return;
+
         const targetBody = document.body;
 
         const toggleBar = document.createElement('div');
@@ -74,8 +178,9 @@
         targetBody.appendChild(commentIframe);
         targetBody.appendChild(toggleBar);
 
-        let isOpen = false;
-        let isInitialized = false;
+        // グローバル参照へ代入
+        globalToggleBar = toggleBar;
+        globalCommentIframe = commentIframe;
 
         toggleBar.onclick = async () => {
             isOpen = !isOpen;
@@ -93,13 +198,12 @@
                     await fetchAndInjectEverything(commentIframe);
                 }
             } else {
-                toggleBar.innerText = '◁';
-                commentIframe.style.setProperty('transform', 'translateX(350px)', 'important');
-                toggleBar.style.setProperty('transform', 'translateX(0px)', 'important');
-                document.documentElement.style.setProperty('margin-right', '0px', 'important');
-                document.documentElement.style.setProperty('width', '100%', 'important');
+                closeSidebar();
             }
         };
+
+        // メッセージリスナーを一度だけ開始
+        listenToFilterUpdate();
     }
 
     async function fetchAndInjectEverything(iframe) {
@@ -110,7 +214,7 @@
                 サイトのセキュリティ設定により、<br>
                 Nostrurlの実行がブロックされました。<br>
                 <span style="font-size: 12px; color: #aaa;">（拡張機能版をご利用ください）</span><br>
-				<a href="https://nostrurl.github.io/base/" style="color: #a370f7; text-decoration: none;">Nostrurl's Lab</a> | <a href="https://github.com/nostrurl" style="color: #a370f7; text-decoration: none;">Nostrurl</a>
+                <a href="https://nostrurl.github.io/base/" style="color: #a370f7; text-decoration: none;">Nostrurl's Lab</a> | <a href="https://github.com/nostrurl" style="color: #a370f7; text-decoration: none;">Nostrurl</a>
             </div>
         `;
 
@@ -122,7 +226,7 @@
                 ネットワーク接続やGitHubの状態を<br>
                 確認してください。<br>
                 <span style="font-size: 11px; color: #aaa; display: inline-block; margin-top: 8px;">一時的なエラーの可能性があります</span><br>
-				<a href="https://nostrurl.github.io/base/" style="color: #a370f7; text-decoration: none;">Nostrurl's Lab</a> | <a href="https://github.com/nostrurl" style="color: #a370f7; text-decoration: none;">Nostrurl</a>
+                <a href="https://nostrurl.github.io/base/" style="color: #a370f7; text-decoration: none;">Nostrurl's Lab</a> | <a href="https://github.com/nostrurl" style="color: #a370f7; text-decoration: none;">Nostrurl</a>
             </div>
         `;
 
@@ -143,7 +247,6 @@
             const cssText = await cssRes.text();
             let jsText = await jsRes.text();
 
-            // ─── purge.txt からクレンジング用リストを生成 ───
             let purgeRules = [];
             if (purgeRes && purgeRes.ok) {
                 const purgeText = await purgeRes.text();
@@ -152,7 +255,6 @@
                     .filter(line => line && !line.startsWith('#'));
             }
 
-            // ─── URLのクレンジング処理 ───
             const targetUrl = new URL(window.location.href);
             const currentKeys = [...targetUrl.searchParams.keys()];
 
@@ -170,7 +272,6 @@
             }
 
             const cleanUrl = targetUrl.toString();
-            // ──────────────────────────────
 
             const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
             iframeDoc.open();
@@ -185,7 +286,6 @@
                 versionElement.innerText = typeof GM_info !== 'undefined' ? `v${GM_info.script.version}` : '不正なバージョン';
             }
 
-            // 🛡️ localStorageが使えない環境（親の制限やシークレットモード）を事前にチェック
             let isStorageAvailable = false;
             try {
                 window.localStorage.setItem('__nostr_test__', '1');
@@ -197,7 +297,7 @@
 
             iframe.contentWindow.REAL_PARENT_URL = cleanUrl;
             iframe.contentWindow.NOSTR_CHAT_ALIVE = false;
-            iframe.contentWindow.PARENT_STORAGE_AVAILABLE = isStorageAvailable; // 子に判定を渡す
+            iframe.contentWindow.PARENT_STORAGE_AVAILABLE = isStorageAvailable;
 
             const scriptElement = iframeDoc.createElement('script');
             scriptElement.textContent = jsText;

@@ -1,5 +1,5 @@
 // =================================================================
-// ✨ Tampermonkey / 同一ドメインiframe対応のためのポリフィル
+//  Tampermonkey / 同一ドメインiframe対応のためのポリフィル
 // =================================================================
 
 // 動作確認
@@ -48,7 +48,504 @@ if (typeof chrome === 'undefined' || !chrome.runtime) {
             },
             // イベントリスナーをちゃんと配列に捕獲する形に強化
             onMessage: {
+                addListener: function(callback) {// =================================================================
+// ✨ Tampermonkey / 同一ドメインiframe対応のためのポリフィル
+// =================================================================
+
+// 動作確認
+if (window.top !== window.self) { window.NOSTR_CHAT_ALIVE = true; }
+
+if (typeof chrome === 'undefined' || !chrome.runtime) {
+    // リスナーを退避させておくためのグローバルな配列
+    window._mockListeners = window._mockListeners || [];
+
+    window.chrome = {
+        runtime: {
+            // アイコン画像のパスをGitHub of Raw URLにすり替える
+            getURL: function(path) {
+                return "https://raw.githubusercontent.com/nostrurl/base/main/assets/" + path;
+            },
+            // 拡張機能のメッセージの代わりに、親ページの window.parent.nostr を直接叩いて結果を疑似返却する
+            sendMessage: async function(message, callback) {
+                const parentNostr = window.parent && window.parent.nostr;
+                
+                if (message.type === 'GET_PUBLIC_KEY') {
+                    if (parentNostr) {
+                        try {
+                            const pubKey = await parentNostr.getPublicKey();
+                            if (callback) callback({ pubKey: pubKey });
+                            // 退避させておいたメッセージリスナー（startPublicKeyMonitorなど）にも通知を届ける
+                            window._mockListeners.forEach(ln => ln({ type: 'CHAT_UI_FORCE_UPDATE', pubKey: pubKey }));
+                        } catch(e) {
+                            if (callback) callback({ pubKey: "Guest" });
+                        }
+                    } else {
+                        if (callback) callback({ pubKey: "No Extension" });
+                    }
+                } 
+                else if (message.type === 'SIGN_EVENT') {
+                    if (parentNostr) {
+                        try {
+                            const signedEvent = await parentNostr.signEvent(message.event);
+                            if (callback) callback({ success: true, event: signedEvent });
+                        } catch(e) {
+                            if (callback) callback({ success: false });
+                        }
+                    } else {
+                        if (callback) callback({ success: false });
+                    }
+                }
+            },
+            // イベントリスナーをちゃんと配列に捕獲する形に強化
+            onMessage: {
                 addListener: function(callback) {
+                    if (typeof callback === 'function') {
+                        window._mockListeners.push(callback);
+                    }
+                }
+            }
+        }
+    };
+}
+// =================================================================
+
+// --- 1. 定義と設定 ---
+const DEFAULT_CONFIG = {
+    ROOM_MODE: 'url',
+    CUSTOM_ROOM_NAME: 'Nostrurl',
+    RELAY_URLS: [
+        'wss://relay-jp.nostr.wirednet.jp',
+        'wss://relay.nostr.wirednet.jp', 
+    ],
+    RECONNECT_INTERVAL: 5000,
+    // ================= 新機能用の初期値定義 =================
+    FILTER_MODE: 'off',         // 'off' | 'whitelist' | 'blacklist'
+    FILTER_DOMAINS: []          // 登録されたドメイン文字列（例: ["example.com", "github.com"]）
+};
+
+// --- 2. 関数定義 ---
+function loadConfig() {
+    const saved = localStorage.getItem('nostrurl_config');
+    const defaultCopy = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
+    if (saved) {
+        try {
+            const parsed = JSON.parse(saved);
+            return { ...defaultCopy, ...parsed };
+        } catch (e) { 
+            console.error("Config parse error:", e); 
+            return defaultCopy;
+        }
+    }
+    return defaultCopy;
+}
+
+function saveConfig(config) {
+    localStorage.setItem('nostrurl_config', JSON.stringify(config));
+    
+    // 親スクリプト（ユーザースクリプト側）へ設定変更をリアルタイム通知
+    if (window.parent) {
+        window.parent.postMessage({
+            type: 'NOSTRURL_FILTER_UPDATE',
+            filterMode: config.FILTER_MODE,
+            filterDomains: config.FILTER_DOMAINS
+        }, '*');
+    }
+}
+
+function generateTargetKey(url, config) {
+    const roomName = config.CUSTOM_ROOM_NAME || 'Nostrurl';
+    const cleanUrl = url.split('#')[0];
+    if (config.ROOM_MODE === 'url') return cleanUrl;
+    if (config.ROOM_MODE === 'room_name') return roomName;
+    return cleanUrl + roomName;
+}
+
+// ドメイン抽出ヘルパー（手動入力の揺らぎや親URLから純粋なホスト名を取り出す）
+function extractDomain(inputUrl) {
+    try {
+        let target = inputUrl.trim();
+        if (!/^https?:\/\//i.test(target)) {
+            target = 'https://' + target;
+        }
+        return new URL(target).hostname.toLowerCase();
+    } catch (e) {
+        return inputUrl.trim().toLowerCase();
+    }
+}
+
+// --- 3. 変数の初期化 ---
+let currentConfig = loadConfig();
+const sockets = new Map();
+const activeSubs = new Map();
+const reconnectTimeouts = new Map(); // 再接続管理用
+
+console.log("初期設定の全リレー数:", DEFAULT_CONFIG.RELAY_URLS.length);
+console.log("現在読み込まれたリレー数:", currentConfig.RELAY_URLS.length);
+
+const urlParams = new URLSearchParams(window.location.search);
+const currentUrl = window.REAL_PARENT_URL || urlParams.get('url') || window.location.href || "about:blank";
+const currentDomain = extractDomain(currentUrl); // 現在の親サイトのドメイン
+
+let nostrUrlTargetKey = generateTargetKey(currentUrl, currentConfig);
+let pubKey = "Guest";
+let isRelayConnected = false;
+let commentList = [];
+let seenEventIds = new Set();
+let roomChangeTimeout = null;
+let isManualMode = false;
+
+// --- 4. DOM要素の取得 ---
+document.getElementById('header-icon').src = chrome.runtime.getURL('icon.png');
+const commentBox = document.getElementById('comments');
+const manualBox = document.getElementById('manual-view');
+const menuBtn = document.getElementById('menu-btn');
+const inputArea = document.getElementById('input');
+const sendBtn = document.getElementById('send');
+const guiMode = document.getElementById('gui-mode');
+const guiRoomName = document.getElementById('gui-room-name');
+const guiRelayList = document.getElementById('gui-relay-list');
+const guiRelayInput = document.getElementById('gui-relay-input');
+const guiRelayAddBtn = document.getElementById('gui-relay-add-btn');
+const activeKeyDisp = document.getElementById('active-key-disp');
+const displayKeySpan = document.getElementById('display-key');
+const connStatusDisp = document.getElementById('connection-status');
+
+// ================= 新機能用DOM要素の取得 =================
+const guiFilterMode = document.getElementById('gui-filter-mode');
+const guiFilterToggleCurrentBtn = document.getElementById('gui-filter-toggle-current-btn');
+const guiFilterSearch = document.getElementById('gui-filter-search');
+const guiFilterList = document.getElementById('gui-filter-list');
+const guiFilterInput = document.getElementById('gui-filter-input');
+const guiFilterAddBtn = document.getElementById('gui-filter-add-btn');
+
+// --- 5. UIの初期設定 ---
+guiMode.value = currentConfig.ROOM_MODE;
+guiRoomName.value = currentConfig.CUSTOM_ROOM_NAME;
+activeKeyDisp.innerText = nostrUrlTargetKey;
+
+// 新機能UIの初期化
+guiFilterMode.value = currentConfig.FILTER_MODE || 'off';
+
+// --- 6. 処理ロジック ---
+function updateStatusUI() {
+    if (!connStatusDisp || !displayKeySpan) return;
+    if (pubKey === "Guest") displayKeySpan.innerText = "Guest（閲覧モード）";
+    else if (pubKey === "No Extension") displayKeySpan.innerText = "鍵がないよ";
+    else displayKeySpan.innerText = pubKey.length > 8 ? `${pubKey.substring(0, 8)}...` : pubKey;
+
+    if (pubKey === "No Extension") connStatusDisp.innerHTML = '❌ 連携失敗';
+    else if (pubKey !== "Guest" && isRelayConnected) connStatusDisp.innerHTML = '✅ 公開鍵';
+    else connStatusDisp.innerHTML = '⏳ 鍵確認中...';
+}
+
+function startPublicKeyMonitor() {
+    chrome.runtime.onMessage.addListener((message) => {
+        if (message.type === 'CHAT_UI_FORCE_UPDATE' && pubKey !== message.pubKey) {
+            pubKey = message.pubKey;
+            updateStatusUI();
+        }
+    });
+    chrome.runtime.sendMessage({ type: 'GET_PUBLIC_KEY' }, (response) => {
+        if (response && response.pubKey) { pubKey = response.pubKey; updateStatusUI(); }
+    });
+}
+
+window.addEventListener('message', (event) => {
+    if (event.data && event.data.type === 'STATUS_UPDATE') {
+        const newStatus = event.data.status;
+        if (newStatus === 'No Extension') { pubKey = 'No Extension'; updateStatusUI(); }
+        else if (newStatus === 'Connected') {
+            chrome.runtime.sendMessage({ type: 'GET_PUBLIC_KEY' }, (res) => {
+                if (res && res.pubKey) { pubKey = res.pubKey; updateStatusUI(); }
+            });
+        }
+    }
+});
+
+function handleRoomChange() {
+    nostrUrlTargetKey = generateTargetKey(currentUrl, currentConfig);
+    activeKeyDisp.innerText = nostrUrlTargetKey;
+    commentList = []; seenEventIds.clear();
+    commentBox.innerHTML = "Loading comments...";
+    sockets.forEach((ws, url) => {
+        if (ws.readyState === WebSocket.OPEN) {
+            if (activeSubs.has(url)) ws.send(JSON.stringify(["CLOSE", activeSubs.get(url)]));
+            const newSubId = 'sub-' + Math.random().toString(36).substr(2, 9);
+            activeSubs.set(url, newSubId);
+            ws.send(JSON.stringify(["REQ", newSubId, { "kinds": [1], "#r": [nostrUrlTargetKey], "limit": 50 }]));
+        }
+    });
+}
+
+function connectToRelay(url) {
+    if (sockets.has(url) && sockets.get(url).readyState === WebSocket.OPEN) return;
+    if (reconnectTimeouts.has(url)) { clearTimeout(reconnectTimeouts.get(url)); reconnectTimeouts.delete(url); }
+
+    try {
+        const ws = new WebSocket(url);
+        sockets.set(url, ws);
+        ws.onopen = () => {
+            isRelayConnected = true; updateStatusUI();
+            console.log(`[Connected]: ${url}`);
+            const subId = 'sub-' + Math.random().toString(36).substr(2, 9);
+            activeSubs.set(url, subId);
+            ws.send(JSON.stringify(["REQ", subId, { "kinds": [1], "#r": [nostrUrlTargetKey], "limit": 50 }]));
+        };
+        ws.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            if (data[0] === "EVENT") {
+                const nostrEvent = data[2];
+                if (nostrEvent.tags.some(t => t[0] === 'r' && t[1] === nostrUrlTargetKey) && !seenEventIds.has(nostrEvent.id)) {
+                    seenEventIds.add(nostrEvent.id); commentList.push(nostrEvent); renderComments();
+                }
+            }
+        };
+        ws.onclose = () => {
+            console.log(`[Disconnected]: ${url}`);
+            sockets.delete(url); activeSubs.delete(url);
+            isRelayConnected = Array.from(sockets.values()).some(s => s.readyState === WebSocket.OPEN);
+            updateStatusUI();
+            if (currentConfig.RELAY_URLS.includes(url)) {
+                const timer = setTimeout(() => connectToRelay(url), currentConfig.RECONNECT_INTERVAL);
+                reconnectTimeouts.set(url, timer);
+            }
+        };
+    } catch (e) {
+        if (currentConfig.RELAY_URLS.includes(url)) {
+            const timer = setTimeout(() => connectToRelay(url), currentConfig.RECONNECT_INTERVAL);
+            reconnectTimeouts.set(url, timer);
+        }
+    }
+}
+
+function renderComments() {
+    if (isManualMode) return;
+    if (commentList.length === 0) { 
+        commentBox.innerHTML = '<div style="color:#aaa; text-align:center; margin-top:20px;">まだコメントがありません</div>'; 
+        return; 
+    }
+    
+    commentList.sort((a, b) => a.created_at - b.created_at);
+    const pad = (n) => String(n).padStart(2, '0');
+    
+    commentBox.innerHTML = commentList.map(ev => {
+        const date = new Date(ev.created_at * 1000);
+        const timeStr = `${String(date.getFullYear()).slice(-2)}/${pad(date.getMonth()+1)}/${pad(date.getDate())}  ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+        
+        return `<div class="msg-row"><div class="msg-header"><strong style="color: #b388ff;">${ev.pubkey.substring(0,8)}:</strong><span class="msg-time">${timeStr}</span></div><div class="msg-content-wrap"><div class="msg-content">${linkifyAndTruncate(ev.content)}</div></div><div class="msg-action-bar"></div></div>`;
+    }).join('');
+
+    const rows = commentBox.querySelectorAll('.msg-row');
+    rows.forEach(row => {
+        const wrap = row.querySelector('.msg-content-wrap');
+        const content = row.querySelector('.msg-content');
+        const actionBar = row.querySelector('.msg-action-bar');
+        
+        if (content.scrollHeight > 120) {
+            wrap.classList.add('is-clamped');
+            
+            const btn = document.createElement('button');
+            btn.className = 'read-more-btn';
+            btn.innerText = '▼ 続きを読む';
+            
+            btn.onclick = () => {
+                const isOpen = wrap.classList.toggle('is-expanded');
+                wrap.classList.toggle('is-clamped', !isOpen);
+                btn.innerText = isOpen ? '▲ 折りたたむ' : '▼ 続きを読む';
+            };
+            
+            actionBar.appendChild(btn);
+        }
+    });
+
+    commentBox.scrollTop = commentBox.scrollHeight;
+}
+
+function renderGuiRelayList() {
+    guiRelayList.innerHTML = '';
+    currentConfig.RELAY_URLS.forEach((url, i) => {
+        const li = document.createElement('li');
+        li.className = 'gui-relay-item';
+        li.innerHTML = `<span>${url}</span>`;
+        const delBtn = document.createElement('button');
+        delBtn.className = 'gui-btn-del';
+        delBtn.innerText = '削除';
+        delBtn.onclick = () => {
+            currentConfig.RELAY_URLS = currentConfig.RELAY_URLS.filter(u => u !== url);
+            saveConfig(currentConfig);
+            if (sockets.has(url)) sockets.get(url).close();
+            if (reconnectTimeouts.has(url)) { clearTimeout(reconnectTimeouts.get(url)); reconnectTimeouts.delete(url); }
+            renderGuiRelayList();
+        };
+        li.appendChild(delBtn);
+        guiRelayList.appendChild(li);
+    });
+}
+
+// ================= 新機能：フィルターリストのレンダリングロジック =================
+function renderGuiFilterList() {
+    guiFilterList.innerHTML = '';
+    const domains = currentConfig.FILTER_DOMAINS || [];
+    const searchQuery = guiFilterSearch.value.toLowerCase().trim();
+
+    if (domains.length === 0) {
+        guiFilterList.innerHTML = '<div style="color: #666; text-align: center; padding: 10px; font-size: 11px;">登録されたドメインはありません</div>';
+        updateFilterToggleBtn();
+        return;
+    }
+
+    domains.forEach(domain => {
+        const li = document.createElement('li');
+        li.className = 'gui-filter-item';
+        li.innerHTML = `<span>${domain}</span>`;
+
+        // 検索文字にマッチしない場合は非表示クラスを付与
+        if (searchQuery && !domain.includes(searchQuery)) {
+            li.classList.add('hide-item');
+        }
+
+        const delBtn = document.createElement('button');
+        delBtn.className = 'gui-btn-del';
+        delBtn.innerText = '削除';
+        delBtn.onclick = () => {
+            currentConfig.FILTER_DOMAINS = currentConfig.FILTER_DOMAINS.filter(d => d !== domain);
+            saveConfig(currentConfig);
+            renderGuiFilterList();
+        };
+
+        li.appendChild(delBtn);
+        guiFilterList.appendChild(li);
+    });
+
+    updateFilterToggleBtn();
+}
+
+// クイック登録・解除ボタンの状態（テキストと緑／赤の色分けクラス）を動的更新する
+function updateFilterToggleBtn() {
+    const domains = currentConfig.FILTER_DOMAINS || [];
+    const isRegistered = domains.includes(currentDomain);
+
+    // 一旦色分けクラスをすべて剥がす
+    guiFilterToggleCurrentBtn.classList.remove('state-add', 'state-remove');
+
+    if (isRegistered) {
+        guiFilterToggleCurrentBtn.innerText = `❌ ${currentDomain} をリストから除外`;
+        guiFilterToggleCurrentBtn.classList.add('state-remove');
+    } else {
+        guiFilterToggleCurrentBtn.innerText = `📄 ${currentDomain} をリストに登録`;
+        guiFilterToggleCurrentBtn.classList.add('state-add');
+    }
+}
+
+function escapeHtml(str) { return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;"); }
+
+function linkifyAndTruncate(text) {
+    let escaped = escapeHtml(text);
+    const urlRegex = /(https?:\/\/[^\s<>\"]+)/g;
+    
+    return escaped.replace(urlRegex, (url) => {
+        let displayUrl = url;
+        if (url.length > 50) {
+            displayUrl = url.substring(0, 47) + '...';
+        }
+        return `<a href="${url}" target="_blank" rel="noopener noreferrer" style="color: #82b1ff; text-decoration: underline;">${displayUrl}</a>`;
+    });
+}
+
+const executeSubmit = async () => {
+    if (pubKey === "Guest" || pubKey === "No Extension") { alert("投稿できません"); return; }
+    const text = inputArea.value.trim(); if (!text) return;
+    let baseEvent = { kind: 1, created_at: Math.floor(Date.now() / 1000), tags: [["r", nostrUrlTargetKey]], content: text };
+    chrome.runtime.sendMessage({ type: 'SIGN_EVENT', event: baseEvent }, (res) => {
+        if (res && res.success) {
+            sockets.forEach(ws => { if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify(["EVENT", res.event])); });
+            inputArea.value = "";
+        }
+    });
+};
+
+// --- 7. 初期化とイベントリスナー設定 ---
+startPublicKeyMonitor();
+
+menuBtn.onclick = () => {
+    isManualMode = !isManualMode;
+    manualBox.classList.toggle('show-element', isManualMode);
+    manualBox.classList.toggle('hide-element', !isManualMode);
+    commentBox.classList.toggle('hide-element', isManualMode);
+    menuBtn.innerText = isManualMode ? '💬' : '⚙️';
+    if (!isManualMode) renderComments();
+};
+
+guiMode.onchange = () => { currentConfig.ROOM_MODE = guiMode.value; saveConfig(currentConfig); handleRoomChange(); };
+guiRoomName.oninput = () => { currentConfig.CUSTOM_ROOM_NAME = guiRoomName.value.trim(); saveConfig(currentConfig); clearTimeout(roomChangeTimeout); roomChangeTimeout = setTimeout(handleRoomChange, 300); };
+guiRelayAddBtn.onclick = () => {
+    const url = guiRelayInput.value.trim();
+    if (url && url.startsWith('wss://') && !currentConfig.RELAY_URLS.includes(url)) {
+        currentConfig.RELAY_URLS.push(url); saveConfig(currentConfig); renderGuiRelayList(); connectToRelay(url);
+    }
+};
+
+// ================= 新機能用のイベントリスナー設定 =================
+
+// フィルターモード（常時、ホワイト、ブラック）の切り替え
+guiFilterMode.onchange = () => {
+    currentConfig.FILTER_MODE = guiFilterMode.value;
+    saveConfig(currentConfig);
+};
+
+// 現在のドメインのワンクリック登録・解除トリガー
+guiFilterToggleCurrentBtn.onclick = () => {
+    const domains = currentConfig.FILTER_DOMAINS || [];
+    if (domains.includes(currentDomain)) {
+        // すでに登録されていれば除外する
+        currentConfig.FILTER_DOMAINS = domains.filter(d => d !== currentDomain);
+    } else {
+        // 未登録なら現在のドメインを追加する
+        currentConfig.FILTER_DOMAINS.push(currentDomain);
+    }
+    saveConfig(currentConfig);
+    renderGuiFilterList();
+};
+
+// リストのインクリメンタルサーチ（リアルタイム絞り込み）
+guiFilterSearch.oninput = () => {
+    renderGuiFilterList();
+};
+
+// 手動ドメイン追加
+guiFilterAddBtn.onclick = () => {
+    const rawInput = guiFilterInput.value.trim();
+    if (!rawInput) return;
+
+    const domain = extractDomain(rawInput);
+    if (domain && !currentConfig.FILTER_DOMAINS.includes(domain)) {
+        currentConfig.FILTER_DOMAINS.push(domain);
+        saveConfig(currentConfig);
+        guiFilterInput.value = '';
+        renderGuiFilterList();
+    }
+};
+
+sendBtn.onclick = executeSubmit;
+inputArea.onkeydown = (e) => { if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') executeSubmit(); };
+
+currentConfig.RELAY_URLS.forEach(url => connectToRelay(url));
+renderGuiRelayList();
+
+// 新機能：フィルター初期レンダリング
+renderGuiFilterList();
+
+// --- デバッグ用 ---
+window.debugNostr = {
+    listSockets: () => {
+        sockets.forEach((ws, url) => {
+            console.log(`URL: ${url}, 状態: ${ws.readyState === 1 ? 'OPEN' : 'CLOSED'}`);
+        });
+    },
+    reconnectAll: () => {
+        currentConfig.RELAY_URLS.forEach(url => connectToRelay(url));
+    }
+};
                     if (typeof callback === 'function') {
                         window._mockListeners.push(callback);
                     }

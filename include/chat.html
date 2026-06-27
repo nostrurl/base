@@ -102,16 +102,26 @@
             <details>
                 <summary>❓ モードの違い</summary>
                 <ul class="mode-desc">
-                    <li>🌐 <code>url</code> (標準)<br><span style="color: #aaa;">ページURL単体をタグにします。</span></li>
-                    <li>🖇️ <code>combined</code> (URL＋部屋名)<br><span style="color: #aaa;">URLに設定した部屋名を合体させてタグを作ります。</span></li>
-                    <li>🚪 <code>room_name</code> (部屋名のみ)<br><span style="color: #aaa;">URLを一切無視して部屋名だけをタグにします。</span></li>
+                    <li>🌐 <code>url</code> (標準)<br><span style="color: #aaa;">ページURL単体をタグにします。Damusや他アプリのWebサイトコメント機能とそのまま共存できます。<br>
+					 用途 : ページに対する一般的なコメントを残したい時。<br>
+					 ポイント : 他のNostrアプリとの互換性が高く、最も標準的な使い方です。
+					</span></li>
+                    <li>🖇️ <code>combined</code> (URL＋部屋名)<br><span style="color: #aaa;">URLに設定した部屋名を合体させてタグを作ります。特定のサイト内に「Nostrurlユーザー専用の秘密の部屋」を作りたい時に最適です。<br>
+					 用途 : 同じURLの中で、さらに話題ごとに部屋を分けたい時。<br>
+					 ポイント : ページURLの「別室」を作る感覚で使えます。
+					</span></li>
+                    <li>🚪 <code>room_name</code> (部屋名のみ)<br><span style="color: #aaa;">URLを一切無視して部屋名だけをタグにします。どのWebサイトを開いていても、同じ部屋名を設定した人同士で常時繋がれます。<br>
+					 用途 : Webサイトに関係なく、特定のトピックで会話したい時。<br>
+					 ポイント : どのURLを開いていても、設定した部屋名の部屋に参加できます。
+					</span></li>
                 </ul>
             </details>
             
             <details>
                 <summary>🔧 必要な拡張機能</summary>
                 <ul>
-                    <li>ブラウザに nos2x や Alby などのNostr拡張機能が必要です。</li>
+                    <li>ブラウザに <b><a href="https://github.com/fiatjaf/nos2x" target="_blank" style="color: #b388ff !important;">nos2x</a></b> や <b><a href="https://getalby.com/" target="_blank" style="color: #b388ff !important;">Alby</a></b> などのNostr拡張機能（NIP-07形式）が必要です。</li>
+                    <li>拡張機能側で拡張機能のアクセスや「署名」を許可してください。</li>
                 </ul>
             </details>
 
