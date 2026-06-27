@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Nostrurl (ユーザースクリプト版)
 // @namespace    nostrurl.github.io/base/
-// @version      6.2.11
+// @version      6.2.12
 // @description  URLをタグにしたNostrコメント欄を設ける
 // @author       Nostrurl
 // @match        http://*/*
@@ -124,14 +124,14 @@
 
         try {
             const timestamp = Date.now();
-            const [htmlRes, jsRes] = await Promise.all([
+            const [htmlRes, cssRes, jsRes] = await Promise.all([
                 fetch(`${GITHUB_RAW_HTML_URL}?t=${timestamp}`),
 				fetch(`${GITHUB_RAW_CSS_URL}?t=${timestamp}`),
                 fetch(`${GITHUB_RAW_JS_URL}?t=${timestamp}`)
             ]);
 
             // 404や500エラーなどのHTTPエラーはここでキャッチしてネットワークエラー側へ
-            if (!htmlRes.ok || !jsRes.ok) {
+            if (!htmlRes.ok || !cssRes.ok || !jsRes.ok) {
                 throw new Error("HTTP_ERROR");
             }
 
