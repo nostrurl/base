@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Nostrurl (ユーザースクリプト版)
 // @namespace    nostrurl.github.io/base/
-// @version      6.6.5
+// @version      6.6.6
 // @description  URLをタグにしたNostrコメント欄を設ける
 // @author       Nostrurl
 // @match        http://*/*
@@ -288,8 +288,15 @@
                 }
             }
 
-            const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+			const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
             iframeDoc.open();
+
+            // チャット画面が開いた瞬間に、共通ストレージのデータを設定画面に同期する
+            try {
+                const globalData = GM_getValue('nostrurl_global_config', '{"FILTER_MODE":"off","FILTER_DOMAINS":[]}');
+                iframe.contentWindow.localStorage.setItem('nostrurl_config', globalData);
+            } catch(e) { console.error("[Nostrurl] iframeへのデータ同期失敗:", e); }
+
             iframeDoc.write(htmlText);
 
             const styleElement = iframeDoc.createElement('style');
