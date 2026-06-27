@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Nostrurl (ユーザースクリプト版)
 // @namespace    nostrurl.github.io/base/
-// @version      6.2.10
+// @version      6.2.9
 // @description  URLをタグにしたNostrコメント欄を設ける
 // @author       Nostrurl
 // @match        http://*/*
@@ -15,12 +15,8 @@
     'use strict';
     if (window.top !== window.self) return;
 
-	// テスト用
-	// const GITHUB_RAW_HTML_URL = "http://localhost:8000/chat.html";
-	// const GITHUB_RAW_JS_URL = "http://localhost:8000/chat.js";
-
-	const GITHUB_RAW_HTML_URL = "https://raw.githubusercontent.com/nostrurl/base/main/chat.html";
-	const GITHUB_RAW_JS_URL = "https://raw.githubusercontent.com/nostrurl/base/main/chat.js";
+	const GITHUB_RAW_HTML_URL = "https://raw.githubusercontent.com/nostrurl/base/main/include/chat.html";
+	const GITHUB_RAW_JS_URL = "https://raw.githubusercontent.com/nostrurl/base/main/include/chat.js";
 
     if (document.body) {
         setupParallelUI();
@@ -139,13 +135,10 @@ async function fetchAndInjectEverything(iframe) {
 
             const htmlText = await htmlRes.text();
             const jsText = await jsRes.text();
-			
-			// HTML内の「chat.css」という文字列を、タイムスタンプ付きに強制置換する
-            const freshHtmlText = htmlText.replace('chat.css', `chat.css?t=${timestamp}`);
 
             const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
             iframeDoc.open();
-            iframeDoc.write(freshHtmlText);
+            iframeDoc.write(htmlText);
 
             iframe.contentWindow.REAL_PARENT_URL = window.location.href;
             iframe.contentWindow.NOSTR_CHAT_ALIVE = false;
