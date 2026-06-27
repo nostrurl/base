@@ -168,3 +168,23 @@ button#send {
     /* 不要な指定を削除 */
     height: auto; 
 }
+
+/* --- バージョン情報を表示 --- */
+/* メニューとバージョンを縦並びにする右側ボックス */
+.header-right-box {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end; /* 右寄せにする */
+    flex-shrink: 0;        /* 横幅を勝手に広げさせない */
+    margin-bottom: 8px;    /* 左側の h3 の下マージンと高さを合わせる */
+}
+
+/* バージョン情報の表示スタイル */
+.version-info {
+    font-size: 9px;        /* 少し小さくしてスッキリ配置 */
+    color: #666;           /* 白だと目立ちすぎるので少し暗めのグレーに */
+    margin-top: -4px;      /* 歯車ボタンとの隙間をグッと詰める */
+    padding-right: 8px;    /* 歯車ボタンの余白感と合わせる */
+    user-select: none;
+    line-height: 1;
+}

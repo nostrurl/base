@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Nostrurl (ユーザースクリプト版)
 // @namespace    nostrurl.github.io/base/
-// @version      6.2.10
+// @version      6.2.11
 // @description  URLをタグにしたNostrコメント欄を設ける
 // @author       Nostrurl
 // @match        http://*/*
@@ -16,6 +16,7 @@
     if (window.top !== window.self) return;
 
 	const GITHUB_RAW_HTML_URL = "https://raw.githubusercontent.com/nostrurl/base/main/include/chat.html";
+	const GITHUB_RAW_CSS_URL = "https://raw.githubusercontent.com/nostrurl/base/main/include/chat.css";
 	const GITHUB_RAW_JS_URL = "https://raw.githubusercontent.com/nostrurl/base/main/include/chat.js";
 
     if (document.body) {
@@ -98,7 +99,7 @@
         };
     }
 
-async function fetchAndInjectEverything(iframe) {
+	async function fetchAndInjectEverything(iframe) {
         // --- 1. 原因ごとのHTMLテンプレートを定義 ---
         const cspNoticeHTML = `
             <div style="color: #ff5252; background: #1a1a1a; padding: 20px; font-family: sans-serif; font-size: 14px; line-height: 1.6; text-align: center;">
@@ -125,6 +126,7 @@ async function fetchAndInjectEverything(iframe) {
             const timestamp = Date.now();
             const [htmlRes, jsRes] = await Promise.all([
                 fetch(`${GITHUB_RAW_HTML_URL}?t=${timestamp}`),
+				fetch(`${GITHUB_RAW_CSS_URL}?t=${timestamp}`),
                 fetch(`${GITHUB_RAW_JS_URL}?t=${timestamp}`)
             ]);
 
@@ -134,16 +136,23 @@ async function fetchAndInjectEverything(iframe) {
             }
 
             const htmlText = await htmlRes.text();
+			const cssText = await cssRes.text();
             const jsText = await jsRes.text();
 
             const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
             iframeDoc.open();
             iframeDoc.write(htmlText);
 
-			// ユーザースクリプトのメタデータからバージョンを取得して、iframe内の要素に書き込む
+			// GitHubから取得したCSSを <style> タグとして注入
+			const styleElement = iframeDoc.createElement('style');
+			styleElement.textContent = cssText;
+			iframeDoc.head.appendChild(styleElement);
+
+			// メタデータからバージョンを動的に注入
 			const versionElement = iframeDoc.querySelector('.version-info');
-			if (versionElement && typeof GM_info !== 'undefined') {
-				versionElement.innerText = `v${GM_info.script.version}`;
+			if (versionElement) {
+				// スクリプト自体のバージョンを流し込む
+				versionElement.innerText = typeof GM_info !== 'undefined' ? `v${GM_info.script.version}` : '不正なバージョン';
 			}
 
             iframe.contentWindow.REAL_PARENT_URL = window.location.href;
