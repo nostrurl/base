@@ -240,12 +240,13 @@ function renderComments() {
     commentList.sort((a, b) => a.created_at - b.created_at);
     const pad = (n) => String(n).padStart(2, '0');
     
-    // 不要な改行とインデントを徹底的に排除した1行のHTMLを組み立てる
+    // インデント無しの1行HTML ＋ URLのリンク＆短縮化を適用
     commentBox.innerHTML = commentList.map(ev => {
         const date = new Date(ev.created_at * 1000);
         const timeStr = `${String(date.getFullYear()).slice(-2)}/${pad(date.getMonth()+1)}/${pad(date.getDate())}  ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
         
-        return `<div class="msg-row"><div class="msg-header"><strong style="color: #b388ff;">${ev.pubkey.substring(0,8)}:</strong><span class="msg-time">${timeStr}</span></div><div class="msg-content-wrap"><div class="msg-content">${escapeHtml(ev.content)}</div></div><div class="msg-action-bar"></div></div>`;
+        // ここで linkifyAndTruncate を使用
+        return `<div class="msg-row"><div class="msg-header"><strong style="color: #b388ff;">${ev.pubkey.substring(0,8)}:</strong><span class="msg-time">${timeStr}</span></div><div class="msg-content-wrap"><div class="msg-content">${linkifyAndTruncate(ev.content)}</div></div><div class="msg-action-bar"></div></div>`;
     }).join('');
 
     // --- アコーディオンの動的判定ロジック ---
@@ -255,9 +256,8 @@ function renderComments() {
         const content = row.querySelector('.msg-content');
         const actionBar = row.querySelector('.msg-action-bar');
         
-        // 実際のコンテンツの高さが 120px を超えているか判定
         if (content.scrollHeight > 120) {
-            wrap.classList.add('is-clamped'); // フェード用のクラス
+            wrap.classList.add('is-clamped');
             
             const btn = document.createElement('button');
             btn.className = 'read-more-btn';
@@ -272,7 +272,6 @@ function renderComments() {
             actionBar.appendChild(btn);
         }
     });
-    // ---------------------------------------------
 
     commentBox.scrollTop = commentBox.scrollHeight;
 }
@@ -299,6 +298,25 @@ function renderGuiRelayList() {
 }
 
 function escapeHtml(str) { return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;"); }
+
+// URLを検知してリンク化し、長すぎるURLは見た目だけ短縮する関数
+function linkifyAndTruncate(text) {
+    // HTMLエスケープを先に適用
+    let escaped = escapeHtml(text);
+    
+    // URLを正規表現でキャプチャ
+    const urlRegex = /(https?:\/\/[^\s<>\"]+)/g;
+    
+    return escaped.replace(urlRegex, (url) => {
+        // 表示用のテキスト（50文字以上の場合は後ろをカットして「...」にする）
+        let displayUrl = url;
+        if (url.length > 50) {
+            displayUrl = url.substring(0, 47) + '...';
+        }
+        // 実際のリンク先（url）はそのままに、表示（displayUrl）だけを短縮
+        return `<a href="${url}" target="_blank" rel="noopener noreferrer" style="color: #82b1ff; text-decoration: underline;">${displayUrl}</a>`;
+    });
+}
 
 const executeSubmit = async () => {
     if (pubKey === "Guest" || pubKey === "No Extension") { alert("投稿できません"); return; }
