@@ -40,6 +40,9 @@ h3 { margin: 0 0 8px 0; font-size: 16px; font-weight: 600; color: #ffffff; }
     border: 1px solid #2d2d2d; background-color: #121212;
     color: #e0e0e0; padding: 10px; margin-bottom: 12px;
     font-size: 13px; border-radius: 6px; line-height: 1.4;
+	
+	/* スクロールを親ページに伝播させない */
+    overscroll-behavior: contain;
 }
 
 /* --- マニュアル・設定表示エリア --- */
