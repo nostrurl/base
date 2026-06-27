@@ -108,7 +108,8 @@ console.log("初期設定の全リレー数:", DEFAULT_CONFIG.RELAY_URLS.length)
 console.log("現在読み込まれたリレー数:", currentConfig.RELAY_URLS.length);
 
 const urlParams = new URLSearchParams(window.location.search);
-const currentUrl = window.REAL_PARENT_URL || urlParams.get('url') || window.location.href || "about:blank";
+// urlParams から 'parentUrl' を最優先で取得するように変更します
+const currentUrl = urlParams.get('parentUrl') || window.location.href || "about:blank";
 let nostrUrlTargetKey = generateTargetKey(currentUrl, currentConfig);
 let pubKey = "Guest";
 let isRelayConnected = false;

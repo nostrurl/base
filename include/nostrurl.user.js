@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Nostrurl (ユーザースクリプト版)
 // @namespace    nostrurl.github.io/base/
-// @version      6.2.16
+// @version      6.3.0
 // @description  URLをタグにしたNostrコメント欄を設ける
 // @author       Nostrurl
 // @match        http://*/*
@@ -15,9 +15,8 @@
     'use strict';
     if (window.top !== window.self) return;
 
-    const GITHUB_RAW_HTML_URL = "https://raw.githubusercontent.com/nostrurl/base/main/include/chat.html";
-    const GITHUB_RAW_CSS_URL = "https://raw.githubusercontent.com/nostrurl/base/main/include/chat.css";
-    const GITHUB_RAW_JS_URL = "https://raw.githubusercontent.com/nostrurl/base/main/include/chat.js";
+    // ★ GitHub Pagesの公開URL（リポジトリ名が base の場合）
+    const PAGES_CHAT_URL = "https://nostrurl.github.io/base/include/chat.html";
     const GITHUB_RAW_PURGE_URL = "https://raw.githubusercontent.com/nostrurl/base/main/include/purge.txt";
 
     if (document.body) {
@@ -88,7 +87,7 @@
 
                 if (!isInitialized) {
                     isInitialized = true;
-                    await fetchAndInjectEverything(commentIframe);
+                    await loadIframeViaPages(commentIframe);
                 }
             } else {
                 toggleBar.innerText = '◁';
@@ -100,121 +99,44 @@
         };
     }
 
-    async function fetchAndInjectEverything(iframe) {
-        const cspNoticeHTML = `
-            <div style="color: #ff5252; background: #1a1a1a; padding: 20px; font-family: sans-serif; font-size: 14px; line-height: 1.6; text-align: center;">
-                <div style="font-size: 24px; margin-bottom: 10px;">⚠️</div>
-                <strong>起動制限</strong><br>
-                サイトのセキュリティ設定により、<br>
-                Nostrurlの実行がブロックされました。<br>
-                <span style="font-size: 12px; color: #aaa;">（拡張機能版をご利用ください）</span>
-            </div>
-        `;
+    async function loadIframeViaPages(iframe) {
+        let cleanUrl = window.location.href;
 
-        const networkNoticeHTML = `
-            <div style="color: #ffb74d; background: #1a1a1a; padding: 20px; font-family: sans-serif; font-size: 14px; line-height: 1.6; text-align: center;">
-                <div style="font-size: 24px; margin-bottom: 10px;">📡</div>
-                <strong>通信エラー</strong><br>
-                スクリプトの取得に失敗しました。<br>
-                ネットワーク接続やGitHubの状態を<br>
-                確認してください。<br>
-                <span style="font-size: 11px; color: #aaa; display: inline-block; margin-top: 8px;">一時的なエラーの可能性があります</span>
-            </div>
-        `;
-
+        // ─── purge.txt からクレンジング用リストを生成（ここだけ親サイト側で一度処理） ───
         try {
             const timestamp = Date.now();
-            const [htmlRes, cssRes, jsRes, purgeRes] = await Promise.all([
-                fetch(`${GITHUB_RAW_HTML_URL}?t=${timestamp}`),
-                fetch(`${GITHUB_RAW_CSS_URL}?t=${timestamp}`),
-                fetch(`${GITHUB_RAW_JS_URL}?t=${timestamp}`),
-                fetch(`${GITHUB_RAW_PURGE_URL}?t=${timestamp}`).catch(() => null)
-            ]);
-
-            if (!htmlRes.ok || !cssRes.ok || !jsRes.ok) {
-                throw new Error("HTTP_ERROR");
-            }
-
-            const htmlText = await htmlRes.text();
-            const cssText = await cssRes.text();
-            const jsText = await jsRes.text();
-
-            // ─── purge.txt からクレンジング用リストを生成 ───
-            let purgeRules = [];
+            const purgeRes = await fetch(`${GITHUB_RAW_PURGE_URL}?t=${timestamp}`).catch(() => null);
+            
             if (purgeRes && purgeRes.ok) {
                 const purgeText = await purgeRes.text();
-                purgeRules = purgeText.split('\n')
-                    .map(line => line.trim().replace(/\r$/, '')) // ★ Windowsの改行コード対策を追加
+                const purgeRules = purgeText.split('\n')
+                    .map(line => line.trim().replace(/\r$/, ''))
                     .filter(line => line && !line.startsWith('#'));
-            }
 
-			// ─── URLのクレンジング処理 ───
-            // 判定ロジックを確実にするため、一旦処理用のURLオブジェクトを作成
-            const targetUrl = new URL(window.location.href);
-            const currentKeys = [...targetUrl.searchParams.keys()];
+                const targetUrl = new URL(window.location.href);
+                const currentKeys = [...targetUrl.searchParams.keys()];
 
-            for (const key of currentKeys) {
-                const shouldDelete = purgeRules.some(rule => {
-                    if (rule.endsWith('*')) {
-                        return key.startsWith(rule.slice(0, -1));
+                for (const key of currentKeys) {
+                    const shouldDelete = purgeRules.some(rule => {
+                        if (rule.endsWith('*')) {
+                            return key.startsWith(rule.slice(0, -1));
+                        }
+                        return key === rule;
+                    });
+
+                    if (shouldDelete) {
+                        targetUrl.searchParams.delete(key);
                     }
-                    return key === rule;
-                });
-
-                if (shouldDelete) {
-                    targetUrl.searchParams.delete(key);
                 }
+                cleanUrl = targetUrl.toString();
             }
-
-            // 最終的に出来上がった綺麗なURLを代入
-            const cleanUrl = targetUrl.toString();
-            // ──────────────────────────────
-
-            const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-            iframeDoc.open();
-            iframeDoc.write(htmlText);
-
-            const styleElement = iframeDoc.createElement('style');
-            styleElement.textContent = cssText;
-            iframeDoc.head.appendChild(styleElement);
-
-            const versionElement = iframeDoc.querySelector('.version-info');
-            if (versionElement) {
-                versionElement.innerText = typeof GM_info !== 'undefined' ? `v${GM_info.script.version}` : '不正なバージョン';
-            }
-
-            iframe.contentWindow.REAL_PARENT_URL = cleanUrl;
-            iframe.contentWindow.NOSTR_CHAT_ALIVE = false;
-
-            const scriptElement = iframeDoc.createElement('script');
-            scriptElement.textContent = jsText;
-            iframeDoc.body.appendChild(scriptElement);
-            iframeDoc.close();
-
-            console.log("[Nostrurl] インクルード処理完了（生存確認開始）");
-
-            setTimeout(() => {
-                if (!iframe.contentWindow.NOSTR_CHAT_ALIVE) {
-                    console.warn("[Nostrurl] スクリプトの実行拒否（CSP）を検知しました。");
-                    showNotice(iframe, cspNoticeHTML);
-                }
-            }, 1000);
-
         } catch (e) {
-            console.warn("[Nostrurl] 通信エラーまたは取得失敗を検知しました:", e.message);
-            showNotice(iframe, networkNoticeHTML);
+            console.warn("[Nostrurl] purge.txt の取得または解析に失敗しました。元のURLを使用します:", e);
         }
-    }
 
-    // メッセージ書き換え用の共通関数
-    function showNotice(iframe, html) {
-        try {
-            const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-            iframeDoc.open();
-            iframeDoc.write(html);
-            iframeDoc.close();
-        } catch (e) {
-            console.error("[Nostrurl] UIの書き換えに失敗:", e);
-        }
+        // ─── GitHub Pages の URL にクレンジング済みのURLをパラメータとして付与して src に代入 ───
+        const finalSrc = `${PAGES_CHAT_URL}?parentUrl=${encodeURIComponent(cleanUrl)}`;
+        iframe.src = finalSrc;
+        console.log("[Nostrurl] GitHub Pages経由でiframeを読み込みました:", finalSrc);
     }
 })();
