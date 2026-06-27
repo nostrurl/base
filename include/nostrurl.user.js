@@ -1,12 +1,14 @@
 // ==UserScript==
 // @name         Nostrurl (ユーザースクリプト版)
 // @namespace    nostrurl.github.io/base/
-// @version      6.4.0
+// @version      6.4.1
 // @description  URLをタグにしたNostrコメント欄を設ける
 // @author       Nostrurl
 // @match        http://*/*
 // @match        https://*/*
 // @icon         https://raw.githubusercontent.com/nostrurl/base/refs/heads/main/assets/icon.png
+// @homepageURL  https://github.com/nostrurl/base
+// @supportURL   https://github.com/nostrurl/base/issues
 // @run-at       document-end
 // @grant        none
 // ==/UserScript==
@@ -107,7 +109,8 @@
                 <strong>起動制限</strong><br>
                 サイトのセキュリティ設定により、<br>
                 Nostrurlの実行がブロックされました。<br>
-                <span style="font-size: 12px; color: #aaa;">（拡張機能版をご利用ください）</span>
+                <span style="font-size: 12px; color: #aaa;">（拡張機能版をご利用ください）</span><br>
+				<a href="https://nostrurl.github.io/base/" style="color: #a370f7; text-decoration: none;">Nostrurl's Lab</a> | <a href="https://github.com/nostrurl" style="color: #a370f7; text-decoration: none;">Nostrurl</a>
             </div>
         `;
 
@@ -119,6 +122,7 @@
                 ネットワーク接続やGitHubの状態を<br>
                 確認してください。<br>
                 <span style="font-size: 11px; color: #aaa; display: inline-block; margin-top: 8px;">一時的なエラーの可能性があります</span>
+				<a href="https://nostrurl.github.io/base/">Nostrurl's Lab</a> | <a href="https://github.com/nostrurl">Nostrurl</a>
             </div>
         `;
 
@@ -137,19 +141,18 @@
 
             const htmlText = await htmlRes.text();
             const cssText = await cssRes.text();
-            const jsText = await jsRes.text();
+            let jsText = await jsRes.text();
 
             // ─── purge.txt からクレンジング用リストを生成 ───
             let purgeRules = [];
             if (purgeRes && purgeRes.ok) {
                 const purgeText = await purgeRes.text();
                 purgeRules = purgeText.split('\n')
-                    .map(line => line.trim().replace(/\r$/, '')) // ★ Windowsの改行コード対策を追加
+                    .map(line => line.trim().replace(/\r$/, ''))
                     .filter(line => line && !line.startsWith('#'));
             }
 
-			// ─── URLのクレンジング処理 ───
-            // 判定ロジックを確実にするため、一旦処理用のURLオブジェクトを作成
+            // ─── URLのクレンジング処理 ───
             const targetUrl = new URL(window.location.href);
             const currentKeys = [...targetUrl.searchParams.keys()];
 
@@ -166,7 +169,6 @@
                 }
             }
 
-            // 最終的に出来上がった綺麗なURLを代入
             const cleanUrl = targetUrl.toString();
             // ──────────────────────────────
 
@@ -183,8 +185,19 @@
                 versionElement.innerText = typeof GM_info !== 'undefined' ? `v${GM_info.script.version}` : '不正なバージョン';
             }
 
+            // 🛡️ localStorageが使えない環境（親の制限やシークレットモード）を事前にチェック
+            let isStorageAvailable = false;
+            try {
+                window.localStorage.setItem('__nostr_test__', '1');
+                window.localStorage.removeItem('__nostr_test__');
+                isStorageAvailable = true;
+            } catch (e) {
+                console.warn("[Nostrurl] 親ドメインでのlocalStorage利用が制限されています:", e.message);
+            }
+
             iframe.contentWindow.REAL_PARENT_URL = cleanUrl;
             iframe.contentWindow.NOSTR_CHAT_ALIVE = false;
+            iframe.contentWindow.PARENT_STORAGE_AVAILABLE = isStorageAvailable; // 子に判定を渡す
 
             const scriptElement = iframeDoc.createElement('script');
             scriptElement.textContent = jsText;
@@ -206,7 +219,6 @@
         }
     }
 
-    // メッセージ書き換え用の共通関数
     function showNotice(iframe, html) {
         try {
             const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;

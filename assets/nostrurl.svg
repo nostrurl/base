@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <!-- 背景のグラデーション（ディープパープルからダークパープルへ） -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#4a157d"/>
+      <stop offset="100%" stop-color="#1f073a"/>
+    </linearGradient>
+    <!-- ノード（丸）の内側の明るいパープル -->
+    <radialGradient id="nodeGrad" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ab60f5"/>
+      <stop offset="100%" stop-color="#913df2"/>
+    </radialGradient>
+  </defs>
+
+  <!-- アイコンの角丸背景ベース -->
+  <rect width="512" height="512" rx="115" fill="url(#bgGrad)"/>
+
+  <!-- ネットワーク枠線のグループ -->
+  <g fill="none" stroke="#f3ebf7" stroke-width="16" stroke-linecap="round" stroke-linejoin="round">
+    <!-- 四角形の結合ライン -->
+    <rect x="120" y="120" width="272" height="272"/>
+    
+    <!-- 四隅の白い外枠リング（ノードの土台） -->
+    <circle cx="120" cy="120" r="42" fill="#1f073a"/>
+    <circle cx="392" cy="120" r="42" fill="#1f073a"/>
+    <circle cx="120" cy="392" r="42" fill="#1f073a"/>
+    <circle cx="392" cy="392" r="42" fill="#1f073a"/>
+  </g>
+
+  <!-- ノードの内側（グラデーションの入った紫の丸） -->
+  <g fill="url(#nodeGrad)">
+    <circle cx="120" cy="120" r="34"/>
+    <circle cx="392" cy="120" r="34"/>
+    <circle cx="120" cy="392" r="34"/>
+    <circle cx="392" cy="392" r="34"/>
+  </g>
+
+  <!-- 中央の「N」の文字（パスで描画して拡大縮小時のズレやフォント依存を防止） -->
+  <path d="M188,338 V174 h34.5 l64,96.5 V174 h37.5 v164 h-32.5 l-66,-99.5 V338 Z" fill="#f3ebf7" fill-rule="nonzero"/>
+</svg>

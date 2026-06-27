@@ -46,7 +46,7 @@
 					<span class="setup-step-title">ステップ 1:</span> <br>
 					ブラウザに <a href="https://www.tampermonkey.net/" target="_blank" class="ext-link">Tampermonkey</a> などのユーザースクリプト管理拡張機能を導入。
 					<details class="setup-details">
-						<summary>🔗 各種ストア・配布元リンクを開く</summary>
+						<summary> 各種ストア・配布元リンクを開く</summary>
 						<ul class="setup-links-list">
 							<li>
 								<b><a href="https://www.tampermonkey.net/" target="_blank" class="main-link">Tampermonkey (公式サイト)</a></b>
@@ -62,7 +62,7 @@
 					<span class="setup-step-title">ステップ 2:</span> <br>
 					ブラウザに <a href="https://github.com/fiatjaf/nos2x" target="_blank" class="ext-link">nos2x</a> や <a href="https://getalby.com/" target="_blank" class="ext-link">Alby</a> などのNostr拡張機能（NIP-07形式）を導入・設定。
 					<details class="setup-details">
-						<summary>🔗 各種ストア・配布元リンクを開く</summary>
+						<summary> 各種ストア・配布元リンクを開く</summary>
 						<ul class="setup-links-list">
 							<li>
 								<b><a href="https://github.com/fiatjaf/nos2x" target="_blank" class="main-link">nos2x (Nostr拡張機能)</a></b>
@@ -104,11 +104,11 @@
 
         <!-- 使い方 -->
         <h2>使い方</h2>
-        <p>導入後、Webサイトを開くと画面右端に紫色のトグルバー 「◁」が出現します。それをクリックすると、そのページ固有のNostrurlがスライドインします。</p>
+        <p>導入後、Webサイトを開くと画面右端に紫色のトグルバー 「◁」が出現します。<br>それをクリックすると、そのページURLをタグにしたNostrurlがスライドインします。</p>
 
         <div class="custom-hr"></div>
 
-<!-- フッター -->
+		<!-- フッター -->
         <footer>
             <!-- 免責事項アコーディオン -->
             <details class="footer-disclaimer">
@@ -125,8 +125,35 @@
                 </div>
             </details>
 
-            <!-- 著作権表示 -->
-            <p class="copyright">© 2026 Nostrurl. Powered by Nostr Protocol.</p>
+			<!-- 著作権表示（フレックスボックスで強制横並び＆中央揃え） -->
+			<div style="display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 11px; color: #aaa; margin-top: 15px;">
+				
+				<a aria-label="Nostrurl Homepage" class="nostrurl-icon" href="https://nostrurl.github.io/base/" style="display: inline-flex; color: #a370f7; text-decoration: none;">
+					<svg aria-hidden="true" height="30" viewBox="0 0 512 512" width="30" style="fill: currentColor;">
+						<!-- 結合ライン（四角形） -->
+						<rect x="120" y="120" width="272" height="272" fill="none" stroke="currentColor" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/>
+						
+						<!-- 四隅のノード（外枠） -->
+						<circle cx="120" cy="120" r="46" fill="none" stroke="currentColor" stroke-width="16"/>
+						<circle cx="392" cy="120" r="46" fill="none" stroke="currentColor" stroke-width="16"/>
+						<circle cx="120" cy="392" r="46" fill="none" stroke="currentColor" stroke-width="16"/>
+						<circle cx="392" cy="392" r="46" fill="none" stroke="currentColor" stroke-width="16"/>
+						
+						<!-- 四隅のノード（塗りつぶし） -->
+						<circle cx="120" cy="120" r="24" fill="currentColor"/>
+						<circle cx="392" cy="120" r="24" fill="currentColor"/>
+						<circle cx="120" cy="392" r="24" fill="currentColor"/>
+						<circle cx="392" cy="392" r="24" fill="currentColor"/>
+
+						<!-- 中央の「N」 -->
+						<path d="M188,338 V174 h34.5 l64,96.5 V174 h37.5 v164 h-32.5 l-66,-99.5 V338 Z" fill="currentColor"/>
+					</svg>
+				</a>
+
+				<!-- text-blockに変えるか、余計な改変を避けるためstyleでインライン化 -->
+				<span class="copyright" style="margin: 0;">© 2026 Nostrurl. Powered by Nostr Protocol.</span>
+
+			</div>
         </footer>
     </div>
 </body>
