@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Nostrurl (ユーザースクリプト版)
 // @namespace    nostrurl.github.io/base/
-// @version      6.2.13
+// @version      6.2.15
 // @description  URLをタグにしたNostrコメント欄を設ける
 // @author       Nostrurl
 // @match        http://*/*
@@ -18,7 +18,6 @@
     const GITHUB_RAW_HTML_URL = "https://raw.githubusercontent.com/nostrurl/base/main/include/chat.html";
     const GITHUB_RAW_CSS_URL = "https://raw.githubusercontent.com/nostrurl/base/main/include/chat.css";
     const GITHUB_RAW_JS_URL = "https://raw.githubusercontent.com/nostrurl/base/main/include/chat.js";
-    // ★ 外部のブラックリストファイルのURL（環境に合わせてパスは調整してください）
     const GITHUB_RAW_PURGE_URL = "https://raw.githubusercontent.com/nostrurl/base/main/include/purge.txt";
 
     if (document.body) {
@@ -125,12 +124,11 @@
 
         try {
             const timestamp = Date.now();
-            // ★ purgeRes を追加して、4つのファイルを同時に超高速ダウンロード
             const [htmlRes, cssRes, jsRes, purgeRes] = await Promise.all([
                 fetch(`${GITHUB_RAW_HTML_URL}?t=${timestamp}`),
                 fetch(`${GITHUB_RAW_CSS_URL}?t=${timestamp}`),
                 fetch(`${GITHUB_RAW_JS_URL}?t=${timestamp}`),
-                fetch(`${GITHUB_RAW_PURGE_URL}?t=${timestamp}`).catch(() => null) // purge.txtが無くても最悪起動はできるようにエラー逃げ道を用意
+                fetch(`${GITHUB_RAW_PURGE_URL}?t=${timestamp}`).catch(() => null)
             ]);
 
             if (!htmlRes.ok || !cssRes.ok || !jsRes.ok) {
@@ -146,8 +144,8 @@
             if (purgeRes && purgeRes.ok) {
                 const purgeText = await purgeRes.text();
                 purgeRules = purgeText.split('\n')
-                    .map(line => line.trim())
-                    .filter(line => line && !line.startsWith('#')); // 空行とコメントを除外
+                    .map(line => line.trim().replace(/\r$/, '')) // ★ Windowsの改行コード対策を追加
+                    .filter(line => line && !line.startsWith('#'));
             }
 
             // ─── URLのクレンジング処理 ───
@@ -157,10 +155,8 @@
             for (const key of currentKeys) {
                 const shouldDelete = purgeRules.some(rule => {
                     if (rule.endsWith('*')) {
-                        // 「utm_*」のような前方一致ルール（「*」を除いた部分で始まるかチェック）
                         return key.startsWith(rule.slice(0, -1));
                     }
-                    // 通常の完全一致ルール
                     return key === rule;
                 });
 
@@ -206,6 +202,7 @@
         }
     }
 
+    // メッセージ書き換え用の共通関数
     function showNotice(iframe, html) {
         try {
             const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
