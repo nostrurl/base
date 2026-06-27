@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Nostrurl (ユーザースクリプト版)
 // @namespace    nostrurl.github.io/base/
-// @version      6.5.1
+// @version      6.6.0
 // @description  URLをタグにしたNostrコメント欄を設ける
 // @author       Nostrurl
 // @match        http://*/*
@@ -19,6 +19,7 @@
 
     const GITHUB_RAW_HTML_URL = "https://raw.githubusercontent.com/nostrurl/base/main/include/chat.html";
     const GITHUB_RAW_CSS_URL = "https://raw.githubusercontent.com/nostrurl/base/main/include/chat.css";
+    const GITHUB_RAW_FILTER_JS_URL = "https://raw.githubusercontent.com/nostrurl/base/main/include/domain-filter.js"; // ✨ 追加
     const GITHUB_RAW_JS_URL = "https://raw.githubusercontent.com/nostrurl/base/main/include/chat.js";
     const GITHUB_RAW_PURGE_URL = "https://raw.githubusercontent.com/nostrurl/base/main/include/purge.txt";
 
@@ -198,17 +199,20 @@
 
         try {
             const timestamp = Date.now();
-            const [htmlRes, cssRes, jsRes, purgeRes] = await Promise.all([
+            // ✨ GITHUB_RAW_FILTER_JS_URL を取得リストに追加
+            const [htmlRes, cssRes, filterJsRes, jsRes, purgeRes] = await Promise.all([
                 fetch(`${GITHUB_RAW_HTML_URL}?t=${timestamp}`),
                 fetch(`${GITHUB_RAW_CSS_URL}?t=${timestamp}`),
+                fetch(`${GITHUB_RAW_FILTER_JS_URL}?t=${timestamp}`),
                 fetch(`${GITHUB_RAW_JS_URL}?t=${timestamp}`),
                 fetch(`${GITHUB_RAW_PURGE_URL}?t=${timestamp}`).catch(() => null)
             ]);
 
-            if (!htmlRes.ok || !cssRes.ok || !jsRes.ok) throw new Error("HTTP_ERROR");
+            if (!htmlRes.ok || !cssRes.ok || !filterJsRes.ok || !jsRes.ok) throw new Error("HTTP_ERROR");
 
             const htmlText = await htmlRes.text();
             const cssText = await cssRes.text();
+            const filterJsText = await filterJsRes.text();
             let jsText = await jsRes.text();
 
             let purgeRules = [];
@@ -246,9 +250,16 @@
             iframe.contentWindow.NOSTR_CHAT_ALIVE = false;
             iframe.contentWindow.PARENT_STORAGE_AVAILABLE = isStorageAvailable;
 
+            // ✨ 先に domain-filter.js をインジェクション
+            const filterScriptElement = iframeDoc.createElement('script');
+            filterScriptElement.textContent = filterJsText;
+            iframeDoc.body.appendChild(filterScriptElement);
+
+            // 続いて主処理の chat.js をインジェクション
             const scriptElement = iframeDoc.createElement('script');
             scriptElement.textContent = jsText;
             iframeDoc.body.appendChild(scriptElement);
+            
             iframeDoc.close();
 
             setTimeout(() => {
