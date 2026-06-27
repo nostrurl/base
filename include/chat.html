@@ -2,178 +2,8 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <style>
-        /* ==========================================
-         * ✨ 外部CSSから直接埋め込んだスタイルシート
-         * ========================================== */
-        /* --- 基本設定 --- */
-        html, body {
-            margin: 0; padding: 0;
-            width: 100%; height: 100%;
-            background-color: #1a1a1a; color: #e0e0e0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            overflow: hidden;
-        }
-        * { box-sizing: border-box; }
-
-        /* --- 構造設定 --- */
-        #comment-main {
-            width: 100%; height: 100%;
-            display: flex; flex-direction: column;
-            padding: 16px;
-        }
-        .header-container {
-            display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 4px;
-        }
-        h3 { margin: 0 0 8px 0; font-size: 16px; font-weight: 600; color: #ffffff; }
-
-        /* --- メニューボタン --- */
-        #menu-btn {
-            background: none; border: none; color: #aaa;
-            font-size: 16px; cursor: pointer; padding: 4px 8px;
-            transition: color 0.2s; user-select: none;
-        }
-        #menu-btn:hover { color: #b388ff; }
-
-        /* --- メタ情報エリア --- */
-        .meta-line {
-            display: flex; align-items: center; justify-content: flex-start;
-            gap: 8px; margin-bottom: 12px; font-size: 11px; color: #aaa;
-        }
-
-        /* --- コメント表示エリア --- */
-        #comments {
-            flex: 1; overflow-y: auto;
-            border: 1px solid #2d2d2d; background-color: #121212;
-            color: #e0e0e0; padding: 10px; margin-bottom: 12px;
-            font-size: 13px; border-radius: 6px; line-height: 1.4;
-        }
-
-        /* --- マニュアル・設定表示エリア --- */
-        #manual-view {
-            position: absolute; 
-            top: 50px; left: 16px; right: 16px; bottom: 80px;
-            z-index: 999; 
-            display: none; /* 初期状態は非表示 */
-            background-color: #161616; 
-            border: 1px solid #2d2d2d;
-            padding: 14px; 
-            border-radius: 6px;
-            font-size: 13px; 
-            line-height: 1.5; 
-            overflow-y: auto;
-        }
-
-        /* JSで .show-element を付与した時に強制的に表示させる */
-        #manual-view.show-element { 
-            display: block !important; 
-        }
-
-        .menu-title {
-            font-weight: bold; color: #b388ff;
-            margin: 14px 0 6px 0; border-bottom: 1px solid #333; padding-bottom: 4px;
-        }
-        .menu-title:first-child { margin-top: 0; }
-
-        /* --- コンポーネントスタイル --- */
-        .custom-hr { border: 0; border-top: 1px solid #333; margin: 16px 0; }
-
-        #manual-view details { margin-top: 14px; border-bottom: 1px solid #333; padding-bottom: 6px; }
-        #manual-view summary {
-            font-weight: bold; color: #b388ff; cursor: pointer;
-            user-select: none; font-size: 14px; margin-bottom: 4px;
-        }
-        #manual-view summary:hover { color: #d1b3ff; }
-
-        #manual-view ul { margin: 4px 0 0 0; padding-left: 18px; color: #bbb; }
-        #manual-view li { margin-bottom: 6px; }
-
-        code {
-            background: #2a2a2a; color: #ff80ab; padding: 2px 4px;
-            border-radius: 4px; font-family: monospace; font-size: 11px;
-            display: inline-block; word-break: break-all;
-        }
-        .code-display { color: #64b5f6 !important; margin: 8px 0; }
-
-        textarea {
-            width: 100%; height: 60px; resize: none;
-            background-color: #252525; color: #ffffff;
-            border: 1px solid #444; border-radius: 6px; padding: 8px;
-            font-size: 13px; margin-bottom: 8px;
-        }
-        button#send {
-            width: 100%; padding: 10px; background-color: #6a1b9a;
-            color: white; border: none; border-radius: 6px;
-            cursor: pointer; font-weight: bold; font-size: 14px;
-        }
-
-        /* --- メッセージ表示 --- */
-        .msg-row {
-            border-bottom: 1px solid #2d2d2d; padding: 6px 0;
-            font-size: 13px; line-height: 1.4; white-space: pre-wrap;
-        }
-        .msg-header { display: flex; justify-content: space-between; margin-bottom: 2px; font-size: 12px; }
-        .msg-time { color: #fff; font-size: 12px; font-family: monospace; }
-
-        /* --- 設定フォーム用 --- */
-        .gui-control { background: #222; border: 1px solid #444; border-radius: 6px; padding: 10px; margin-bottom: 12px; }
-        .gui-control label { font-size: 12px; font-weight: bold; color: #b388ff; display: block; margin-bottom: 4px; }
-        .gui-control select, .gui-control input[type="text"] {
-            width: 100%; background: #333; color: #fff;
-            border: 1px solid #555; border-radius: 4px; padding: 6px; font-size: 13px; margin-bottom: 10px;
-        }
-        .gui-relay-item {
-            display: flex; justify-content: space-between; align-items: center;
-            background: #2a2a2a; padding: 4px 8px; border-radius: 4px; margin-bottom: 4px;
-            font-size: 11px; font-family: monospace;
-        }
-        /* --- ボタン共通スタイル --- */
-        .gui-btn-del {
-            background: #c62828; color: #fff; border: none;
-            border-radius: 4px; padding: 2px 6px; cursor: pointer; font-size: 11px;
-        }
-
-        .gui-btn-add {
-            background: #2e7d32; color: #fff; border: none;
-            border-radius: 4px; padding: 4px 10px; cursor: pointer; 
-            font-size: 11px; font-weight: bold;
-        }
-
-        /* --- 設定フォーム用：干渉しない安全なレイアウト --- */
-        .gui-relay-add-box {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 0px;
-            align-items: center;
-        }
-
-        #gui-relay-input {
-            flex: 1;
-            background: #333; 
-            color: #fff;
-            border: 1px solid #555; 
-            border-radius: 4px; 
-            padding: 0 8px;
-            font-size: 13px;
-            min-width: 0;
-            height: 30px;
-            line-height: 30px;
-        }
-
-        #gui-relay-add-btn {
-            flex-shrink: 0;
-            padding: 2px 6px; 
-            background: #2e7d32; 
-            color: #fff; 
-            border: none;
-            border-radius: 4px; 
-            cursor: pointer; 
-            font-size: 11px; 
-            font-weight: bold;
-            height: auto; 
-        }
-    </style>
+    <!-- HTML直書きの長いCSSは消して、外部ファイルを読み込む形に一本化します -->
+    <link rel="stylesheet" href="chat.css">
 </head>
 <body>
     <div id="comment-main">
@@ -182,7 +12,11 @@
                 <img id="header-icon" style="height: 1.4em !important; width: auto !important; margin-right: 6px !important; vertical-align: middle !important;">
                 Nostrurl
             </h3>
-            <button id="menu-btn" title="ヘルプ・マニュアル">⚙️</button>
+			<div class="header-right-box" style="display: flex !important; align-items: center !important; gap: 8px !important;">
+				<!-- 歯車の左にバージョンを置くための構造 -->
+                <div class="version-info" style="font-size: 12px !important; color: #888 !important; user-select: none !important;"></div>
+                <button id="menu-btn" title="ヘルプ・マニュアル" style="background: none !important; border: none !important; cursor: pointer !important; padding: 0 !important; font-size: 16px !important;">⚙️</button>
+            </div>
         </div>
         
         <div class="meta-line">
@@ -191,6 +25,7 @@
 
         <div id="comments">Loading comments...</div>
 
+        <!-- 以下のマニュアル・設定表示エリアは変更ありません -->
         <div id="manual-view" class="notranslate hide-element" translate="no">
             <div class="menu-title">⚙️ Nostrurl ライブ設定</div>
             <div class="gui-control">
@@ -230,11 +65,11 @@
                 <div style="font-size: 11px; color: #888; padding-top: 8px; line-height: 1.4;">
                     <ul style="padding-left: 15px; margin: 0;">
                         <li><strong>投稿の責任:</strong> 本ツールを利用した投稿の責任は、投稿者本人に帰属します。</li>
-                        <li><strong>権利の所在:</strong> 投稿データの著作権や利用権の扱いは、利用するリレーサーバーの規約に依存します。リレーによっては規約により権利の帰属が規定されている場合があるため、ご自身でご確認ください。</li>
-                        <li><strong>データ保持:</strong> 投稿データはリレー上に保存されます。Nostrurlはデータを保持・管理・削除する権限を有しません。</li>
-                        <li><strong>削除依頼について:</strong> 個別の投稿削除依頼には対応できません。これはNostrurlが一切の投稿データを保有していないためです。投稿先のリレー管理者へ、署名に使用した拡張機能等から削除依頼を行ってください。</li>
+                        <li><strong>権利の所在:</strong> 投稿データの著作権や利用権の扱いは、利用するリレーサーバーの規約に依存します。</li>
+                        <li><strong>データ保持:</strong> 投稿データはリレー上に保存されます。</li>
+                        <li><strong>削除依頼について:</strong> 個別の投稿削除依頼には対応できません。</li>
                         <li><strong>免責:</strong> 本ツールの利用により生じたいかなる損害についても、管理人は一切の責任を負いません。</li>
-                        <li><strong>感謝:</strong> 初期設定のリレーサーバーとさせて頂いている[wss://relay-jp.nostr.wirednet.jp]様、[wss://relay.nostr.wirednet.jp]様、Nostrに携わる人たちに、心より感謝致します。</li>
+                        <li><strong>感謝:</strong> 初期設定のリレーサーバー様、Nostrに携わる人たちに、心より感謝致します。</li>
                     </ul>
                 </div>
             </details>
@@ -242,41 +77,23 @@
             <details>
                 <summary>❓ モードの違い</summary>
                 <ul class="mode-desc">
-                    <li>🌐 <code>url</code> (標準)<br><span style="color: #aaa;">ページURL単体をタグにします。Damusや他アプリのWebサイトコメント機能とそのまま共存できます。<br>
-                     用途 : ページに対する一般的なコメントを残したい時。<br>
-                     ポイント : 他のNostrアプリとの互換性が高く、最も標準的な使い方です。
-                    </span></li>
-                    <li>🖇️ <code>combined</code> (URL＋部屋名)<br><span style="color: #aaa;">URLに設定した部屋名を合体させてタグを作ります。特定のサイト内に「Nostrurlユーザー専用の秘密の部屋」を作りたい時に最適です。<br>
-                     用途 : 同じURLの中で、さらに話題ごとに部屋を分けたい時。<br>
-                     ポイント : ページURLの「別室」を作る感覚で使えます。
-                    </span></li>
-                    <li>🚪 <code>room_name</code> (部屋名のみ)<br><span style="color: #aaa;">URLを一切無視して部屋名だけをタグにします。どのWebサイトを開いていても、同じ部屋名を設定した人同士で常時繋がれます。<br>
-                     用途 : Webサイトに関係なく、特定のトピックで会話したい時。<br>
-                     ポイント : どのURLを開いていても、設定した部屋名の部屋に参加できます。
-                    </span></li>
+                    <li>🌐 <code>url</code> (標準)<br><span style="color: #aaa;">ページURL単体をタグにします。</span></li>
+                    <li>🖇️ <code>combined</code> (URL＋部屋名)<br><span style="color: #aaa;">URLに設定した部屋名を合体させてタグを作ります。</span></li>
+                    <li>🚪 <code>room_name</code> (部屋名のみ)<br><span style="color: #aaa;">URLを一切無視して部屋名だけをタグにします。</span></li>
                 </ul>
             </details>
             
             <details>
                 <summary>🔧 必要な拡張機能</summary>
                 <ul>
-                    <li>ブラウザに <b><a href="https://github.com/fiatjaf/nos2x" target="_blank" style="color: #b388ff !important;">nos2x</a></b> や <b><a href="https://getalby.com/" target="_blank" style="color: #b388ff !important;">Alby</a></b> などのNostr拡張機能（NIP-07形式）が必要です。</li>
-                    <li>拡張機能側で拡張機能のアクセスや「署名」を許可してください。</li>
+                    <li>ブラウザに nos2x や Alby などのNostr拡張機能が必要です。</li>
                 </ul>
             </details>
 
             <details>
                 <summary>🔗 リンク</summary>
-                    <li style="margin-top: 6px;"><b><a href="https://github.com/fiatjaf/nos2x" target="_blank" style="color: #b388ff !important;">nos2x (Nostr拡張機能)</a></b></li>
-                    <ul>
-                        <li><a href="https://chromewebstore.google.com/detail/nos2x/kpgefcfmnafjgpblomihpgmejjdanjjp?hl=ja" target="_blank" style="color: #64b5f6 !important;">Chrome系 nos2x</a></li>
-                        <li><a href="https://addons.mozilla.org/ja/firefox/addon/nos2x-fox/" target="_blank" style="color: #64b5f6 !important;">Firefox nos2x</a></li>
-                    </ul>
-                    <li style="margin-top: 6px;"><b><a href="https://getalby.com/" target="_blank" style="color: #b388ff !important;">Alby (Bitcoin/Nostrウォレット)</a></b></li>
-                    <ul>
-                        <li><a href="https://chromewebstore.google.com/detail/alby-bitcoin-lightning-wa/iikmkjmpaadaobahmeloendndfphd" target="_blank" style="color: #64b5f6 !important;">Chrome系 Alby</a></li>
-                        <li><a href="https://addons.mozilla.org/ja/firefox/addon/alby/" target="_blank" style="color: #64b5f6 !important;">Firefox Alby</a></li>
-                    </ul>
+                <li style="margin-top: 6px;"><b><a href="https://github.com/fiatjaf/nos2x" target="_blank" style="color: #b388ff !important;">nos2x (Nostr拡張機能)</a></b></li>
+                <li style="margin-top: 6px;"><b><a href="https://getalby.com/" target="_blank" style="color: #b388ff !important;">Alby (Bitcoin/Nostrウォレット)</a></b></li>
             </details>
         </div>
 

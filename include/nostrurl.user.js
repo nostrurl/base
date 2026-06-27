@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Nostrurl (ユーザースクリプト版)
 // @namespace    nostrurl.github.io/base/
-// @version      6.2.9
+// @version      6.2.10
 // @description  URLをタグにしたNostrコメント欄を設ける
 // @author       Nostrurl
 // @match        http://*/*
@@ -139,6 +139,12 @@ async function fetchAndInjectEverything(iframe) {
             const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
             iframeDoc.open();
             iframeDoc.write(htmlText);
+
+			// ユーザースクリプトのメタデータからバージョンを取得して、iframe内の要素に書き込む
+			const versionElement = iframeDoc.querySelector('.version-info');
+			if (versionElement && typeof GM_info !== 'undefined') {
+				versionElement.innerText = `v${GM_info.script.version}`;
+			}
 
             iframe.contentWindow.REAL_PARENT_URL = window.location.href;
             iframe.contentWindow.NOSTR_CHAT_ALIVE = false;
