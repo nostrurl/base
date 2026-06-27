@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Nostrurl (ユーザースクリプト版)
 // @namespace    nostrurl.github.io/base/
-// @version      6.6.3
+// @version      6.6.4
 // @description  URLをタグにしたNostrコメント欄を設ける
 // @author       Nostrurl
 // @match        http://*/*
@@ -318,8 +318,20 @@
             iframeDoc.close();
 
             setTimeout(() => {
-                // もしCSPでチャットのスクリプト実行自体が止められたら、自作の親切なエラー画面を出す
-                if (!iframe.contentWindow.NOSTR_CHAT_ALIVE) showNotice(iframe, cspNoticeHTML);
+                // もしCSPでチャットのスクリプト実行（NOSTR_CHAT_ALIVE）が止められたら
+                if (!iframe.contentWindow.NOSTR_CHAT_ALIVE) {
+                    // iframe の中身を一度空にして、自作のエラー画面をきれいに流し込む
+                    try {
+                        const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                        iframeDoc.open();
+                        iframeDoc.write(`
+                            <body style="margin:0; background:#1a1a1a; display:flex; align-items:center; justify-content:center; height:100vh;">
+                                ${cspNoticeHTML}
+                            </body>
+                        `);
+                        iframeDoc.close();
+                    } catch(e) {}
+                }
             }, 1000);
 
         } catch (e) {
