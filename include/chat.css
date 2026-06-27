@@ -236,3 +236,87 @@ button#send {
     color: #d1b3ff;
     text-decoration: underline;
 }
+
+/* 現在のサイトのクイック登録・解除ボタンのベーススタイル */
+.filter-btn {
+    border: none;
+    border-radius: 4px;
+    padding: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background 0.2s, color 0.2s;
+}
+
+/* 未登録状態（＝クリックすると「登録」するポジティブな緑系） */
+.filter-btn.state-add {
+    background-color: #1b5e20 !important;
+    color: #e8f5e9 !important;
+}
+.filter-btn.state-add:hover {
+    background-color: #2e7d32 !important;
+}
+
+/* 登録済み状態（＝クリックすると「解除」するネガティブな赤・オレンジ系） */
+.filter-btn.state-remove {
+    background-color: #b71c1c !important;
+    color: #ffebee !important;
+}
+.filter-btn.state-remove:hover {
+    background-color: #c62828 !important;
+}
+
+/* フィルター登録済みサイト一覧のアイテムレイアウト（リレーの構成をスマートに流用） */
+.gui-filter-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #2a2a2a;
+    padding: 6px 10px;
+    border-radius: 4px;
+    margin: 4px !important;
+    font-size: 12px;
+    font-family: monospace;
+    border-left: 3px solid #b388ff; /* Nostrカラーのアクセント線 */
+}
+
+/* 検索で非表示になったアイテム用クラス */
+.gui-filter-item.hide-item {
+    display: none !important;
+}
+
+/* 手動ドメイン追加ボックスの構成（リレー追加の最適化ロジックを踏襲） */
+.gui-filter-add-box {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 0px;
+    align-items: center;
+}
+
+#gui-filter-input {
+    flex: 1;
+    background: #333;
+    color: #fff;
+    border: 1px solid #555;
+    border-radius: 4px;
+    padding: 0 8px;
+    font-size: 13px;
+    min-width: 0;
+    height: 30px;
+    line-height: 30px;
+}
+
+#gui-filter-add-btn {
+    flex-shrink: 0;
+    padding: 2px 10px;
+    background: #2e7d32;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 11px;
+    font-weight: bold;
+    height: 30px; /* 入力欄の高さにしっかり合わせる */
+}
+#gui-filter-add-btn:hover {
+    background: #388e3c;
+}

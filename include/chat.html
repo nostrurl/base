@@ -49,6 +49,29 @@
                     <input type="text" id="gui-relay-input" placeholder="wss://...">
                     <button id="gui-relay-add-btn">追加</button>
                 </div>
+				
+				<label>🛡️ 動作フィルター設定</label>
+                <select id="gui-filter-mode">
+                    <option value="off">常時起動 (全サイトで有効)</option>
+                    <option value="whitelist">ホワイトリスト (登録サイトのみ起動)</option>
+                    <option value="blacklist">ブラックリスト (登録サイトを除外)</option>
+                </select>
+
+                <!-- 現在のサイトのクイック登録・解除ボタン（JS側でボタンテキストを動的に変更） -->
+                <button id="gui-filter-toggle-current-btn" class="filter-btn" style="width: 100% !important; margin-top: 6px !important; font-size: 11px !important;">⏳ 判定中...</button>
+
+                <label>📄 フィルター登録済みサイト一覧</label>
+                <!-- 検索・絞り込みボックス（登録数が多くなった時のため） -->
+                <input type="text" id="gui-filter-search" placeholder="登録ドメインを検索..." style="margin-bottom: 6px !important; font-size: 11px !important; padding: 4px 8px !important;">
+                
+                <!-- スクロール可能なドメインリスト（CSS側でmax-heightを設定想定） -->
+                <ul id="gui-filter-list" style="list-style: none !important; padding: 0 !important; margin: 0 !important; max-height: 120px !important; overflow-y: auto !important; border: 1px solid #444 !important; border-radius: 4px !important; background: #222 !important;"></ul>
+
+                <label>＋ 手動でドメインを追加</label>
+                <div class="gui-filter-add-box" style="display: flex !important; gap: 4px !important;">
+                    <input type="text" id="gui-filter-input" placeholder="example.com" style="flex: 1 !important;">
+                    <button id="gui-filter-add-btn">追加</button>
+                </div>
             </div>
 
             <div class="menu-section">
