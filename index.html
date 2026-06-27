@@ -34,29 +34,62 @@
             </div>
         </div>
         
-        <p>「Nostrならどこでもコメント欄を配置できるのでは」<br>という興味だけで Nostrurl を作っている実験場。</p>
+        <p>「Nostrならどこでもコメント欄を配置できるのでは」という興味だけで Nostrurl を作っている実験場。</p>
 
         <!-- 成果物の配布 -->
 		<h2>成果物の配布</h2>
-		<p>本ツールをご利用いただくには、以下の事前準備が必要です。</p>
-
-		<div style="margin-bottom: 24px; padding-left: 16px; border-left: 3px solid #6a1b9a;">
-			<p style="margin: 6px 0;">
-				<b>ステップ 1:</b> 
-				ブラウザに <a href="https://www.tampermonkey.net/" target="_blank" class="ext-link">Tampermonkey</a> などのユーザースクリプト管理拡張機能を入れてください。
-			</p>
-			<p style="margin: 6px 0;">
-				<b>ステップ 2:</b> 
-				ブラウザに <a href="https://github.com/fiatjaf/nos2x" target="_blank" class="ext-link">nos2x</a> や <a href="https://getalby.com/" target="_blank" class="ext-link">Alby</a> などのNostr拡張機能（NIP-07形式）を導入・設定してください。
-			</p>
+		<div class="setup-container">
+			<p>本ツールをご利用いただくには、以下の事前準備が必要です。</p>
+			
+			<div class="setup-block">
+				<div class="setup-item">
+					<span class="setup-step-title">ステップ 1:</span> <br>
+					ブラウザに <a href="https://www.tampermonkey.net/" target="_blank" class="ext-link">Tampermonkey</a> などのユーザースクリプト管理拡張機能を導入。
+					<details class="setup-details">
+						<summary>🔗 各種ストア・配布元リンクを開く</summary>
+						<ul class="setup-links-list">
+							<li>
+								<b><a href="https://www.tampermonkey.net/" target="_blank" class="main-link">Tampermonkey (公式サイト)</a></b>
+								<ul>
+									<li><a href="https://chromewebstore.google.com/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo?hl=ja&pli=1" target="_blank" class="sub-link">Chrome系 Tampermonkey</a></li>
+									<li><a href="https://addons.mozilla.org/ja/firefox/addon/tampermonkey/" target="_blank" class="sub-link">Firefox Tampermonkey</a></li>
+								</ul>
+							</li>
+						</ul>
+					</details>
+				</div>
+				<div class="setup-item">
+					<span class="setup-step-title">ステップ 2:</span> <br>
+					ブラウザに <a href="https://github.com/fiatjaf/nos2x" target="_blank" class="ext-link">nos2x</a> や <a href="https://getalby.com/" target="_blank" class="ext-link">Alby</a> などのNostr拡張機能（NIP-07形式）を導入・設定。
+					<details class="setup-details">
+						<summary>🔗 各種ストア・配布元リンクを開く</summary>
+						<ul class="setup-links-list">
+							<li>
+								<b><a href="https://github.com/fiatjaf/nos2x" target="_blank" class="main-link">nos2x (Nostr拡張機能)</a></b>
+								<ul>
+									<li><a href="https://chromewebstore.google.com/detail/kpgefcfmnafjgpblomihpgmejjdanjjp?hl=ja" target="_blank" class="sub-link">Chrome系 nos2x</a></li>
+									<li><a href="https://addons.mozilla.org/ja/firefox/addon/nos2x-fox/" target="_blank" class="sub-link">Firefox nos2x</a></li>
+								</ul>
+							</li>
+							<li>
+								<b><a href="https://getalby.com/" target="_blank" class="main-link">Alby (Bitcoin/Nostrウォレット)</a></b>
+								<ul>
+									<li><a href="https://chromewebstore.google.com/detail/alby-bitcoin-lightning-wa/iikmkjmpaadaobahmlepeloendndfphd" target="_blank" class="sub-link">Chrome系 Alby</a></li>
+									<li><a href="https://addons.mozilla.org/ja/firefox/addon/alby/" target="_blank" class="sub-link">Firefox Alby</a></li>
+								</ul>
+							</li>
+						</ul>
+					</details>
+				</div>
+			</div>
 		</div>
 
-		<p>準備が完了したら、以下のボタンからインストールできます。</p>
+		<h3>準備が完了したら、以下のボタンからインストールできます。</h3>
 
         <div class="card">
             <h3>1. Nostrurl (ユーザースクリプト - インクルード版)</h3>
             <p>普通のWebサイトやブログにそっと寄り添う。<br>親ページのスクロールやデザインを壊さないように配慮。</p>
-            <a href="https://raw.githubusercontent.com/nostrurl/base/main/include/nostrurl.user.js" class="btn">スクリプトを導入する ◁</a>
+            <a href="https://raw.githubusercontent.com/nostrurl/base/main/include/nostrurl.user.js" class="btn">▷　スクリプトを導入する　◁</a>
             <div class="notice">⚠️ 強固なセキュリティを持つサイトでは、サイト側の主権を尊重して動作を停止し、案内を表示します。</div>
         </div>
         
@@ -75,9 +108,25 @@
 
         <div class="custom-hr"></div>
 
-        <!-- フッター -->
+<!-- フッター -->
         <footer>
-            <p>© 2026 Nostrurl. Powered by Nostr Protocol.</p>
+            <!-- 免責事項アコーディオン -->
+            <details class="footer-disclaimer">
+                <summary>ご利用にあたって</summary>
+                <div class="disclaimer-content">
+                    <ul>
+                        <li><strong>投稿の責任:</strong> 本ツールを利用した投稿の責任は、投稿者本人に帰属します。</li>
+                        <li><strong>権利の所在:</strong> 投稿データの著作権や利用権の扱いは、利用するリレーサーバーの規約に依存します。リレーによっては規約により権利の帰属が規定されている場合があるため、ご自身でご確認ください。</li>
+                        <li><strong>データ保持:</strong> 投稿データはリレー上に保存されます。Nostrurlはデータを保持・管理・削除する権限を有しません。</li>
+                        <li><strong>削除依頼について:</strong> 個別の投稿削除依頼には対応できません。これはNostrurlが一切の投稿データを保有していないためです。投稿先のリレー管理者へ、署名に使用した拡張機能等から削除依頼を行ってください。</li>
+                        <li><strong>免責:</strong> 本ツールの利用により生じたいかなる損害についても、管理人は一切の責任を負いません。</li>
+                        <li><strong>感謝:</strong> 初期設定のリレーサーバー様、Nostrに携わる人たちに、心より感謝致します。</li>
+                    </ul>
+                </div>
+            </details>
+
+            <!-- 著作権表示 -->
+            <p class="copyright">© 2026 Nostrurl. Powered by Nostr Protocol.</p>
         </footer>
     </div>
 </body>

@@ -23,6 +23,11 @@
             font-size: 18px; font-weight: bold; color: #b388ff;
             margin: 40px 0 14px 0; border-bottom: 1px solid #333; padding-bottom: 6px; 
         }
+        /* .menu-title 準拠の小見出し */
+        h3 { 
+            font-size: 16px; font-weight: bold; color: #b388ff;
+            margin: 40px 0 14px 0; border-bottom: 0.5px solid #333; padding-bottom: 6px; 
+        }
         p { font-size: 14px; color: #e0e0e0; line-height: 1.6; }
 
         /* --- インストール用カード（#manual-view と .gui-control のハイブリッド） --- */
@@ -141,14 +146,158 @@
     margin-bottom: 24px;
 }
 
-/* 内側の紫線のついたステップ部分 */
+/* 内側の紫線のついたステップ部分の枠 */
 .setup-block {
     padding-left: 16px;
     border-left: 3px solid #6a1b9a;
-    margin-top: 12px;
+    margin-top: 14px;
+    margin-bottom: 14px;
+
+    /* ★ここの数値をいじれば、上下の線の長さが自由に「びよ〜ん」と伸び縮みします！ */
+    padding-top: 10px;      /* 大きくすると、線が上に伸びる */
+    padding-bottom: 10px;   /* 大きくすると、線が下に伸びる */
 }
 
-/* 各ステップの行間微調整 */
-.setup-block p {
-    margin: 6px 0;
+/* 各ステップの1行全体のスタイル */
+.setup-item {
+    font-size: 14px;
+    color: #e0e0e0;
+    line-height: 1.6;
+    margin: 0 0 36px 0;    /* ステップ1と2の間の隙間 */
+}
+
+/* 最後のステップだけは下の隙間をゼロにする */
+.setup-item:last-child {
+    margin-bottom: 0;
+}
+
+/* 「ステップ 1:」などの見出し部分の装飾 */
+.setup-step-title {
+    font-size: 16px;
+    font-weight: bold;
+    color: #b388ff;
+    display: inline-block;
+    margin-right: 4px;
+	border-bottom: 0.5px solid #333;
+	margin-bottom: 10px;
+}
+
+/* アコーディオン全体の枠 */
+.setup-details {
+    margin-top: 10px;
+    background-color: #222222; /* 周りより少しだけ明るい黒にしてボタンっぽく */
+    border: 1px solid #333333;
+    border-radius: 4px;
+    padding: 8px 12px;
+}
+
+/* クリックするヘッダー部分 */
+.setup-details summary {
+    cursor: pointer;
+    font-size: 13px;
+    color: #e0e0e0;
+    font-weight: bold;
+    user-select: none;
+}
+.setup-details summary:hover {
+    color: #b388ff; /* ホバー時にうっすら紫に */
+}
+
+/* 開いたときの中身のリスト */
+.setup-links-list {
+    margin: 8px 0 0 0;
+    padding-left: 18px; /* 開いた中身を右に寄せる */
+    list-style-type: disc;
+}
+
+.setup-links-list li {
+    margin-top: 6px;
+    font-size: 13px;
+}
+
+/* メインリンク（GitHubなど）の色 */
+.setup-links-list .main-link {
+    color: #b388ff !important;
+    text-decoration: none;
+}
+.setup-links-list .main-link:hover {
+    text-decoration: underline;
+}
+
+/* 子リンク（Chrome/Firefoxストアなど）の色 */
+.setup-links-list .sub-link {
+    color: #64b5f6 !important; /* 綺麗な青色 */
+    text-decoration: none;
+}
+.setup-links-list .sub-link:hover {
+    text-decoration: underline;
+}
+
+/* --- フッター全体のスタイル --- */
+footer {
+    margin-top: 60px;
+    padding-bottom: 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* 中身を中央に集める */
+    gap: 24px;          /* 免責事項とコピーライトの間の程よい隙間 */
+}
+
+/* フッターの免責事項アコーディオン */
+.footer-disclaimer {
+    max-width: 600px;
+    width: 100%;
+    text-align: center;
+}
+
+.footer-disclaimer summary {
+    cursor: pointer;
+    font-size: 12px;
+    color: #888888;
+    font-weight: bold;
+    user-select: none;
+    transition: color 0.2s;
+/* ─── 三角マークを消し去る ─── */
+    list-style: none;               /* Chrome, Firefox, 一般的なブラウザ用 */
+}
+
+/* Safari（iPhoneやMac）の頑固な三角マークも強制消去 */
+.footer-disclaimer summary::-webkit-details-marker {
+    display: none;
+}
+
+.footer-disclaimer summary:hover {
+    color: #b388ff;      /* ホバー時に優しく紫に光らせる */
+}
+
+/* 開いたときの中身の文章 */
+.disclaimer-content {
+    text-align: left;    /* 長文なので中身は左寄せにして読みやすく */
+    font-size: 14px;
+    color: #888888;
+    line-height: 1.5;
+    padding-top: 12px;
+}
+
+.disclaimer-content ul {
+    padding-left: 16px;
+    margin: 0;
+    list-style-type: disc;
+}
+
+.disclaimer-content li {
+    margin-bottom: 8px;   /* 箇条書きごとの隙間 */
+}
+
+.disclaimer-content li:last-child {
+    margin-bottom: 0;
+}
+
+/* 著作権表示 */
+.copyright {
+    font-size: 12px;
+    color: #666666;
+    margin: 0;
+    letter-spacing: 0.5px;
+    text-align: center;
 }
