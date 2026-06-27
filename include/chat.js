@@ -50,7 +50,7 @@ const DEFAULT_CONFIG = {
         'wss://relay.nostr.wirednet.jp', 
     ],
     RECONNECT_INTERVAL: 5000,
-    FILTER_MODE: 'off',         // 'off' | 'whitelist' | 'blacklist'
+    FILTER_MODE: 'blacklist',         // 'off' | 'whitelist' | 'blacklist'
     FILTER_DOMAINS: []          
 };
 
