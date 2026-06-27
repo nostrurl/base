@@ -240,27 +240,15 @@ function renderComments() {
     commentList.sort((a, b) => a.created_at - b.created_at);
     const pad = (n) => String(n).padStart(2, '0');
     
-    // HTML組み立て（クラス名などを少し調整しています）
+    // 不要な改行とインデントを徹底的に排除した1行のHTMLを組み立てる
     commentBox.innerHTML = commentList.map(ev => {
         const date = new Date(ev.created_at * 1000);
         const timeStr = `${String(date.getFullYear()).slice(-2)}/${pad(date.getMonth()+1)}/${pad(date.getDate())}  ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
         
-        return `
-            <div class="msg-row">
-                <div class="msg-header">
-                    <strong style="color: #b388ff;">${ev.pubkey.substring(0,8)}:</strong>
-                    <span class="msg-time">${timeStr}</span>
-                </div>
-                <!-- ラッパーで包む -->
-                <div class="msg-content-wrap">
-                    <div class="msg-content">${escapeHtml(ev.content)}</div>
-                </div>
-                <!-- ボタン用のプレースホルダー -->
-                <div class="msg-action-bar"></div>
-            </div>`;
+        return `<div class="msg-row"><div class="msg-header"><strong style="color: #b388ff;">${ev.pubkey.substring(0,8)}:</strong><span class="msg-time">${timeStr}</span></div><div class="msg-content-wrap"><div class="msg-content">${escapeHtml(ev.content)}</div></div><div class="msg-action-bar"></div></div>`;
     }).join('');
 
-    // --- ここからアコーディオンの動的判定ロジック ---
+    // --- アコーディオンの動的判定ロジック ---
     const rows = commentBox.querySelectorAll('.msg-row');
     rows.forEach(row => {
         const wrap = row.querySelector('.msg-content-wrap');
@@ -271,7 +259,6 @@ function renderComments() {
         if (content.scrollHeight > 120) {
             wrap.classList.add('is-clamped'); // フェード用のクラス
             
-            // ボタンを生成して配置
             const btn = document.createElement('button');
             btn.className = 'read-more-btn';
             btn.innerText = '▼ 続きを読む';
