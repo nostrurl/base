@@ -326,15 +326,16 @@ menuBtn.onclick = () => {
     manualBox.classList.toggle('hide-element', !isManualMode);
     commentBox.classList.toggle('hide-element', isManualMode);
     menuBtn.innerText = isManualMode ? '💬' : '⚙️';
-    if (!isManualMode) renderComments();
-};
-
-guiMode.onchange = () => { currentConfig.ROOM_MODE = guiMode.value; saveConfig(currentConfig); handleRoomChange(); };
-guiRoomName.oninput = () => { currentConfig.CUSTOM_ROOM_NAME = guiRoomName.value.trim(); saveConfig(currentConfig); clearTimeout(roomChangeTimeout); roomChangeTimeout = setTimeout(handleRoomChange, 300); };
-guiRelayAddBtn.onclick = () => {
-    const url = guiRelayInput.value.trim();
-    if (url && url.startsWith('wss://') && !currentConfig.RELAY_URLS.includes(url)) {
-        currentConfig.RELAY_URLS.push(url); saveConfig(currentConfig); renderGuiRelayList(); connectToRelay(url);
+    
+    if (!isManualMode) {
+        renderComments();
+    } else {
+        // 設定（⚙️）を開いた瞬間にLocalStorageの最新データを再ロードして同期する
+        currentConfig = loadConfig(); 
+        if (filterElements.guiFilterMode) {
+            filterElements.guiFilterMode.value = currentConfig.FILTER_MODE || 'off';
+        }
+        window.NostrFilterManager.renderGuiFilterList(currentConfig, currentDomain, filterElements);
     }
 };
 
