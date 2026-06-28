@@ -233,7 +233,9 @@ p { font-size: 14px; color: #e0e0e0; line-height: 1.6; }
 
 /* --- フッターエリア基本スタイル --- */
 footer { 
-    margin: 40px 0 0 0; border-bottom: 1px solid #333; padding-bottom: 6px; 
+    margin: 40px 0 0 0;
+	border-bottom: 1px solid #333;
+	padding-bottom: 6px; 
 }
 
 
@@ -309,9 +311,10 @@ footer {
 .copyright {
     font-size: 12px;
     color: #666666;
-    margin: 0;
+    margin: 40px 0 0 0;
     letter-spacing: 0.5px;
     text-align: center;
+	border-top: 1px solid #333;
 }
 
 /* --- 別ファイルから読み込んだNostr解説文のスタイル --- */
