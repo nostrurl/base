@@ -234,22 +234,34 @@
 }
 
 /* --- フッター全体のスタイル --- */
-footer {
-    margin-top: 60px;
-    padding-bottom: 40px;
+
+/* 1. 2つの詳細ボタンを横に並べるためのコンテナ（新規追加） */
+.footer-addons {
     display: flex;
-    flex-direction: column;
-    align-items: center; /* 中身を中央に集める */
-    gap: 24px;          /* 免責事項とコピーライトの間の程よい隙間 */
+    gap: 24px;              /* ボタン同士の横の隙間 */
+    justify-content: center;
+    width: 100%;
+    max-width: 700px;
 }
 
-/* フッターの免責事項アコーディオン */
+/* スマホ対応：画面が狭いとき（600px以下）は縦並びにする（新規追加） */
+@media (max-width: 600px) {
+    .footer-addons {
+        flex-direction: column;
+        align-items: center;
+        gap: 16px;
+    }
+}
+
+/* 2. アコーディオン共通（現状の .footer-disclaimer の調整・上書き） */
 .footer-disclaimer {
     max-width: 600px;
     width: 100%;
     text-align: center;
+    flex: 1;                /* 横並びの時に均等な幅に広がるようにする */
 }
 
+/* 3. 三角マークを消去（現状のコードを拡張して両方のアコーディオンに適用） */
 .footer-disclaimer summary {
     cursor: pointer;
     font-size: 12px;
@@ -257,22 +269,17 @@ footer {
     font-weight: bold;
     user-select: none;
     transition: color 0.2s;
-/* ─── 三角マークを消し去る ─── */
-    list-style: none;               /* Chrome, Firefox, 一般的なブラウザ用 */
+    list-style: none;       /* Chrome, Firefox 用 */
 }
 
-/* Safari（iPhoneやMac）の頑固な三角マークも強制消去 */
+/* Safariの頑固な三角マークも強制消去 */
 .footer-disclaimer summary::-webkit-details-marker {
     display: none;
 }
 
-.footer-disclaimer summary:hover {
-    color: #b388ff;      /* ホバー時に優しく紫に光らせる */
-}
-
-/* 開いたときの中身の文章 */
+/* 4. 開いた時の中身のコンテキスト（現状に合わせつつ微調整） */
 .disclaimer-content {
-    text-align: left;    /* 長文なので中身は左寄せにして読みやすく */
+    text-align: left;       /* 長文なので中身は左寄せ */
     font-size: 14px;
     color: #888888;
     line-height: 1.5;
@@ -300,4 +307,35 @@ footer {
     margin: 0;
     letter-spacing: 0.5px;
     text-align: center;
+}
+
+/* --- 別ファイルから読み込んだNostr解説文のスタイル --- */
+.nostr-about-container h3 {
+    font-size: 14px;
+    color: #ffffff !important;
+    margin: 0 0 16px 0 !important;
+    border: none !important;
+    padding: 0 !important;
+    font-weight: bold;
+}
+
+.nostr-about-container h4 {
+    font-size: 13px;
+    color: #b388ff; /* アクセントカラー（お好みの色に） */
+    margin: 32px 0 16px 0;
+    font-weight: bold;
+}
+
+.nostr-about-container h5 {
+    font-size: 12px;
+    color: #ffffff;
+    margin: 16px 0 4px 0;
+    font-weight: bold;
+}
+
+.nostr-about-container p {
+    font-size: 11px;
+    color: #aaaaaa;
+    line-height: 1.6;
+    margin: 0 0 12px 0;
 }
