@@ -334,13 +334,6 @@ p { font-size: 14px; color: #e0e0e0; line-height: 1.6; }
     font-weight: bold;
 }
 
-.nostr-about-container span {
-    font-size: 11px;
-    color: #aaaaaa;
-    line-height: 1.6;
-    margin: 0 0 12px 32px;
-}
-
 .nostr-about-container p {
     font-size: 11px;
     color: #aaaaaa;
