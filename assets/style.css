@@ -342,7 +342,7 @@ p { font-size: 14px; color: #e0e0e0; line-height: 1.6; }
 }
 
 /* 【階層1】h3の後に続く p（インラインをブロック化してインデント浅め） */
-.nostr-about-container h3 + p {
+.nostr-about-container h3 ~ p {
     font-size: 11px;
     color: #aaaaaa;
     line-height: 1.6;
@@ -350,7 +350,7 @@ p { font-size: 14px; color: #e0e0e0; line-height: 1.6; }
 }
 
 /* 【階層2】h5の直後に来る p（インデント深め） */
-.nostr-about-container h5 + p {
+.nostr-about-container h5 ~ p {
     font-size: 11px;
     color: #aaaaaa;
     line-height: 1.6;
