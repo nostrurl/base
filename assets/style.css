@@ -1,145 +1,145 @@
-        /* --- チャットアプリの基本設定を完全移植 --- */
-        html, body { 
-            margin: 0; padding: 0;
-            width: 100%; height: 100%;
-            background-color: #1a1a1a; color: #e0e0e0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            overflow-x: hidden; /* インデックス用に縦スクロールは許可 */
-        }
-        * { box-sizing: border-box; }
+/* --- チャットアプリの基本設定を完全移植 --- */
+html, body { 
+    margin: 0; padding: 0;
+    width: 100%; height: 100%;
+    background-color: #1a1a1a; color: #e0e0e0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    overflow-x: hidden; /* インデックス用に縦スクロールは許可 */
+}
+* { box-sizing: border-box; }
 
-        /* --- 配布サイト用のコンテナ（最大幅を絞って見やすく） --- */
-        .container {
-            max-width: 700px;
-            margin: 0 auto;
-            padding: 60px 16px;
-        }
+/* --- 配布サイト用のコンテナ（最大幅を絞って見やすく） --- */
+.container {
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 60px 16px;
+}
 
-        /* --- タイトル・見出し（チャットアプリ基準） --- */
-        h1 { margin: 0 0 16px 0; font-size: 28px; font-weight: 600; color: #ffffff; }
-        
-        /* .menu-title 準拠のサブタイトル */
-        h2 { 
-            font-size: 18px; font-weight: bold; color: #b388ff;
-            margin: 40px 0 14px 0; border-bottom: 1px solid #333; padding-bottom: 6px; 
-        }
-        /* .menu-title 準拠の小見出し */
-        h3 { 
-            font-size: 16px; font-weight: bold; color: #b388ff;
-            margin: 40px 0 14px 0; border-bottom: 0.5px solid #333; padding-bottom: 6px; 
-        }
-        p { font-size: 14px; color: #e0e0e0; line-height: 1.6; }
+/* --- タイトル・見出し（チャットアプリ基準） --- */
+h1 { margin: 0 0 16px 0; font-size: 28px; font-weight: 600; color: #ffffff; }
 
-        /* --- インストール用カード（#manual-view と .gui-control のハイブリッド） --- */
-        .card {
-            background-color: #161616; 
-            border: 1px solid #2d2d2d;
-            padding: 20px; 
-            margin: 20px 0;
-            border-radius: 6px;
-        }
-        .card h3 { margin: 0 0 8px 0; font-size: 16px; font-weight: 600; color: #ffffff; }
-        
-        /* 外部拡張機能用リンク（チャットのリンクスタイルに準拠） */
-        .ext-link {
-            color: #b388ff !important;
-            text-decoration: none;
-            font-weight: bold;
-        }
-        .ext-link:hover {
-            color: #d1b3ff !important;
-            text-decoration: underline;
-        }
+/* .menu-title 準拠のサブタイトル */
+h2 { 
+    font-size: 18px; font-weight: bold; color: #b388ff;
+    margin: 40px 0 14px 0; border-bottom: 1px solid #333; padding-bottom: 6px; 
+}
+/* .menu-title 準拠の小見出し */
+h3 { 
+    font-size: 16px; font-weight: bold; color: #b388ff;
+    margin: 40px 0 14px 0; border-bottom: 0.5px solid #333; padding-bottom: 6px; 
+}
+p { font-size: 14px; color: #e0e0e0; line-height: 1.6; }
 
-        /* --- ボタン共通スタイル（button#send と .btn の融合） --- */
-        .btn {
-            display: inline-block;
-            text-align: center;
-            text-decoration: none;
-            padding: 10px 20px; 
-            background-color: #6a1b9a;
-            color: white; 
-            border: none; 
-            border-radius: 6px;
-            cursor: pointer; 
-            font-weight: bold; 
-            font-size: 14px;
-            transition: background-color 0.2s;
-        }
-        .btn:hover { 
-            background-color: #4a148c; 
-        }
+/* --- インストール用カード（#manual-view と .gui-control のハイブリッド） --- */
+.card {
+    background-color: #161616; 
+    border: 1px solid #2d2d2d;
+    padding: 20px; 
+    margin: 20px 0;
+    border-radius: 6px;
+}
+.card h3 { margin: 0 0 8px 0; font-size: 16px; font-weight: 600; color: #ffffff; }
 
-        /* --- メタ情報・注意書き（.meta-line と .notice の融合） --- */
-        .notice {
-            font-size: 11px;
-            color: #aaa;
-            margin-top: 12px;
-            line-height: 1.5;
-        }
+/* 外部拡張機能用リンク（チャットのリンクスタイルに準拠） */
+.ext-link {
+    color: #b388ff !important;
+    text-decoration: none;
+    font-weight: bold;
+}
+.ext-link:hover {
+    color: #d1b3ff !important;
+    text-decoration: underline;
+}
 
-        /* --- コンポーネントスタイル（.custom-hr） --- */
-        .custom-hr { border: 0; border-top: 1px solid #333; margin: 40px 0 16px 0; }
-		
-		/* --- プロフィールヘッダーの専用スタイル --- */
-		.profile-header {
-			display: flex;
-			align-items: flex-start;
-			gap: 24px; /* 横並びの隙間 */
-			margin-bottom: 30px;
-		}
-		.profile-avatar {
-			border-radius: 50%; /* 完全な丸型にする */
-			border: 2px solid #2d2d2d;
-			background: #121212;
-			object-fit: cover;
-		}
-		.profile-info {
-			flex: 1;
-		}
-		.profile-title {
-			margin: 0 0 6px 0 !important;
-			font-size: 26px;
-			font-weight: 600;
-			color: #ffffff !important;
-			border: none !important; /* 線を消す */
-			padding: 0 !important;
-		}
-		.profile-desc {
-			margin: 0 0 12px 0;
-			font-size: 14px;
-			color: #e0e0e0;
-		}
-		/* アイコン行のスタイル (.meta-line 準拠) */
-		.profile-meta {
-			display: flex;
-			gap: 16px;
-			font-size: 12px;
-			color: #aaa;
-		}
-		.profile-meta svg {
-			vertical-align: text-bottom;
-			margin-right: 4px;
-			color: #aaa; /* アイコンの色 */
-		}
-		.meta-item {
-			display: flex;
-			align-items: center;
-		}
+/* --- ボタン共通スタイル（button#send と .btn の融合） --- */
+.btn {
+    display: inline-block;
+    text-align: center;
+    text-decoration: none;
+    padding: 10px 20px; 
+    background-color: #6a1b9a;
+    color: white; 
+    border: none; 
+    border-radius: 6px;
+    cursor: pointer; 
+    font-weight: bold; 
+    font-size: 14px;
+    transition: background-color 0.2s;
+}
+.btn:hover { 
+    background-color: #4a148c; 
+}
 
-		/* スマホ対応：画面が狭いときは縦並びにする */
-		@media (max-width: 500px) {
-			.profile-header {
-				flex-direction: column;
-				align-items: center;
-				text-align: center;
-				gap: 16px;
-			}
-			.profile-meta {
-				justify-content: center;
-			}
-		}
-		
+/* --- メタ情報・注意書き（.meta-line と .notice の融合） --- */
+.notice {
+    font-size: 11px;
+    color: #aaa;
+    margin-top: 12px;
+    line-height: 1.5;
+}
+
+/* --- コンポーネントスタイル（.custom-hr） --- */
+.custom-hr { border: 0; border-top: 1px solid #333; margin: 40px 0 16px 0; }
+
+/* --- プロフィールヘッダーの専用スタイル --- */
+.profile-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 24px; /* 横並びの隙間 */
+    margin-bottom: 30px;
+}
+.profile-avatar {
+    border-radius: 50%; /* 完全な丸型にする */
+    border: 2px solid #2d2d2d;
+    background: #121212;
+    object-fit: cover;
+}
+.profile-info {
+    flex: 1;
+}
+.profile-title {
+    margin: 0 0 6px 0 !important;
+    font-size: 26px;
+    font-weight: 600;
+    color: #ffffff !important;
+    border: none !important; /* 線を消す */
+    padding: 0 !important;
+}
+.profile-desc {
+    margin: 0 0 12px 0;
+    font-size: 14px;
+    color: #e0e0e0;
+}
+/* アイコン行のスタイル (.meta-line 準拠) */
+.profile-meta {
+    display: flex;
+    gap: 16px;
+    font-size: 12px;
+    color: #aaa;
+}
+.profile-meta svg {
+    vertical-align: text-bottom;
+    margin-right: 4px;
+    color: #aaa; /* アイコンの色 */
+}
+.meta-item {
+    display: flex;
+    align-items: center;
+}
+
+/* スマホ対応：画面が狭いときは縦並びにする */
+@media (max-width: 500px) {
+    .profile-header {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 16px;
+    }
+    .profile-meta {
+        justify-content: center;
+    }
+}
+
 /* --- 事前準備エリア全体 --- */
 .setup-container {
     margin-left: 16px;
@@ -152,10 +152,8 @@
     border-left: 3px solid #6a1b9a;
     margin-top: 14px;
     margin-bottom: 14px;
-
-    /* ★ここの数値をいじれば、上下の線の長さが自由に「びよ〜ん」と伸び縮みします！ */
-    padding-top: 10px;      /* 大きくすると、線が上に伸びる */
-    padding-bottom: 10px;   /* 大きくすると、線が下に伸びる */
+    padding-top: 10px;      
+    padding-bottom: 10px;   
 }
 
 /* 各ステップの1行全体のスタイル */
@@ -178,8 +176,8 @@
     color: #b388ff;
     display: inline-block;
     margin-right: 4px;
-	border-bottom: 0.5px solid #333;
-	margin-bottom: 10px;
+    border-bottom: 0.5px solid #333;
+    margin-bottom: 10px;
 }
 
 /* アコーディオン全体の枠 */
@@ -233,57 +231,60 @@
     text-decoration: underline;
 }
 
-/* --- フッター全体のスタイル --- */
+/* --- フッターエリア基本スタイル --- */
 
-/* 1. 2つの詳細ボタンを横に並べるためのコンテナ（新規追加） */
-.footer-addons {
-    display: flex;
-    gap: 24px;              /* ボタン同士の横の隙間 */
-    justify-content: center;
-    width: 100%;
-    max-width: 700px;
-}
-
-/* スマホ対応：画面が狭いとき（600px以下）は縦並びにする（新規追加） */
-@media (max-width: 600px) {
-    .footer-addons {
-        flex-direction: column;
-        align-items: center;
-        gap: 16px;
-    }
-}
-
-/* 2. アコーディオン共通（現状の .footer-disclaimer の調整・上書き） */
+/* アコーディオン全体の幅・配置調整 */
 .footer-disclaimer {
     max-width: 600px;
     width: 100%;
+    margin: 0 auto;
     text-align: center;
-    flex: 1;                /* 横並びの時に均等な幅に広がるようにする */
 }
 
-/* 3. 三角マークを消去（現状のコードを拡張して両方のアコーディオンに適用） */
+/* 三角マークの消去 ＆ メニューのインライン横並び化 */
 .footer-disclaimer summary {
+    display: inline-flex !important; 
+    justify-content: center;
+    gap: 24px; /* タブ同士の横の隙間 */
+    width: 100%;
     cursor: pointer;
-    font-size: 12px;
-    color: #888888;
-    font-weight: bold;
     user-select: none;
-    transition: color 0.2s;
-    list-style: none;       /* Chrome, Firefox 用 */
+    list-style: none; /* Chrome, Firefox 用三角消去 */
 }
 
-/* Safariの頑固な三角マークも強制消去 */
+/* Safari用三角マーク消去 */
 .footer-disclaimer summary::-webkit-details-marker {
     display: none;
 }
 
-/* 4. 開いた時の中身のコンテキスト（現状に合わせつつ微調整） */
+/* タブボタン（文字）の基本装飾 */
+.footer-tab {
+    font-size: 12px;
+    font-weight: bold;
+    color: #888888;
+    padding: 2px 8px;
+    transition: color 0.2s, border-bottom 0.2s;
+    border-bottom: 2px solid transparent;
+}
+
+/* タブホバー時 */
+.footer-tab:hover {
+    color: #a370f7;
+}
+
+/* 選択中のアクティブなタブ */
+.footer-tab.active {
+    color: #a370f7;
+    border-bottom: 2px solid #a370f7;
+}
+
+/* 5. インクルードされる中身（コンテンツ展開エリア） */
 .disclaimer-content {
-    text-align: left;       /* 長文なので中身は左寄せ */
+    text-align: left; /* 中身は読みやすく左寄せ */
     font-size: 14px;
     color: #888888;
     line-height: 1.5;
-    padding-top: 12px;
+    padding-top: 16px;
 }
 
 .disclaimer-content ul {
@@ -293,7 +294,7 @@
 }
 
 .disclaimer-content li {
-    margin-bottom: 8px;   /* 箇条書きごとの隙間 */
+    margin-bottom: 8px;
 }
 
 .disclaimer-content li:last-child {
@@ -312,7 +313,7 @@
 /* --- 別ファイルから読み込んだNostr解説文のスタイル --- */
 .nostr-about-container h3 {
     font-size: 14px;
-    color: ##b388ff !important;
+    color: #b388ff !important; /* ##b388ff だったタイポを修正 */
     margin: 0 0 16px 16px !important;
     border: none !important;
     padding: 0 !important;
@@ -321,7 +322,7 @@
 
 .nostr-about-container h4 {
     font-size: 13px;
-    color: #b388ff; /* アクセントカラー（お好みの色に） */
+    color: #b388ff;
     margin: 32px 0 16px 32px;
     font-weight: bold;
 }
@@ -337,38 +338,5 @@
     font-size: 11px;
     color: #aaaaaa;
     line-height: 1.6;
-    margin: 0 0 12px 64;
-}
-
-/* ==========================================================================
-   フッターメニュー（タブ切り替えスタイル）
-   ========================================================================== */
-
-/* 2つのメニュー文字を横並びにして中央寄せ */
-.footer-disclaimer summary {
-    display: inline-flex !important; /* 三角マークを消しつつ横並び */
-    justify-content: center;
-    gap: 20px;
-    width: 100%;
-}
-
-/* メニューのボタン（文字）のスタイル */
-.footer-tab {
-    cursor: pointer;
-    padding: 2px 8px;
-    color: #888888;
-    transition: color 0.2s, border-bottom 0.2s;
-    border-bottom: 2px solid transparent;
-}
-
-/* ホバー時 */
-.footer-tab:hover {
-    color: #a370f7; /* Nostrurlのメインカラーに合わせる */
-}
-
-/* 選択中のタブを強調 */
-.footer-tab.active {
-    color: #a370f7;
-    font-weight: bold;
-    border-bottom: 2px solid #a370f7;
+    margin: 0 0 12px 64px; /* 単位 px が抜けていたのを修正 */
 }
