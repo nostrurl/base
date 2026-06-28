@@ -241,7 +241,7 @@ p { font-size: 14px; color: #e0e0e0; line-height: 1.6; }
     text-align: center;
 }
 
-/* 三角マークの消去 ＆ メニューのインライン横並び化 */
+/* 2つのメニュー文字を横並びにして中央寄せ */
 .footer-disclaimer summary {
     display: inline-flex !important; 
     justify-content: center;
@@ -249,7 +249,7 @@ p { font-size: 14px; color: #e0e0e0; line-height: 1.6; }
     width: 100%;
     cursor: pointer;
     user-select: none;
-    list-style: none; /* Chrome, Firefox 用三角消去 */
+    list-style: none; /* 三角消去 */
 }
 
 /* Safari用三角マーク消去 */
@@ -261,21 +261,21 @@ p { font-size: 14px; color: #e0e0e0; line-height: 1.6; }
 .footer-tab {
     font-size: 12px;
     font-weight: bold;
-    color: #888888;
+    color: #888888; /* 通常時の文字色 */
     padding: 2px 8px;
-    transition: color 0.2s, border-bottom 0.2s;
-    border-bottom: 2px solid transparent;
+    /* 下線や色の変化に関する transition を削除 */
 }
 
-/* タブホバー時 */
+/* ホバー時の色変化を無効化（通常時と同じ色を維持） */
 .footer-tab:hover {
-    color: #a370f7;
+    color: #888888; 
 }
 
-/* 選択中のアクティブなタブ */
+/* 選択中のアクティブなタブ（下線なし、色変化なし、太字のみで表現） */
 .footer-tab.active {
-    color: #a370f7;
-    border-bottom: 2px solid #a370f7;
+    color: #888888;
+    font-weight: bold; /* どちらが選ばれているか判別できるように太字だけ残しています */
+    border-bottom: none; /* 下線を完全に消去 */
 }
 
 /* 5. インクルードされる中身（コンテンツ展開エリア） */
@@ -313,7 +313,7 @@ p { font-size: 14px; color: #e0e0e0; line-height: 1.6; }
 /* --- 別ファイルから読み込んだNostr解説文のスタイル --- */
 .nostr-about-container h3 {
     font-size: 14px;
-    color: #b388ff !important; /* ##b388ff だったタイポを修正 */
+    color: #b388ff !important;
     margin: 0 0 16px 16px !important;
     border: none !important;
     padding: 0 !important;
@@ -338,5 +338,5 @@ p { font-size: 14px; color: #e0e0e0; line-height: 1.6; }
     font-size: 11px;
     color: #aaaaaa;
     line-height: 1.6;
-    margin: 0 0 12px 64px; /* 単位 px が抜けていたのを修正 */
+    margin: 0 0 12px 64px;
 }

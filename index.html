@@ -112,11 +112,10 @@
         <footer>
             <!-- アコーディオン -->
             <details class="footer-disclaimer" id="footer-accordion">
-                <summary>
-                    <!-- クリックしてもアコーディオンが閉じないように、クリックイベントを制御するメニューボタン -->
-                    <span class="footer-tab active" onclick="switchFooterContent(event, 'terms.html')">ご利用にあたって</span>
-                    <span class="footer-tab" onclick="switchFooterContent(event, 'nostr-about.html')">Nostrとは？</span>
-                </summary>
+				<summary>
+					<span class="footer-tab active" onclick="switchFooterContent(event, 'terms.html')">ご利用にあたって</span>
+					<span class="footer-tab" onclick="switchFooterContent(event, 'nostr-about.html')">Nostrとは何ですか？</span>
+				</summary>
                 
                 <!-- 選択されたHTMLの中身がここにサクッと流し込まれる -->
                 <div class="disclaimer-content" id="footer-content-target"></div>
@@ -153,50 +152,53 @@
         </footer>
     </div>
 
-    <!-- インクルード＆切り替えスクリプト -->
-    <script>
-        /**
-         * フッターの中身をサクッと切り替える関数
-         * @param {Event} event - クリックイベント
-         * @param {string} fileName - 読み込むHTMLファイル名
-         */
-        function switchFooterContent(event, fileName) {
-            // summary内のボタンクリックでアコーディオンがパチパチ閉じないようにする
-            event.stopPropagation();
-            
-            const basePath = 'html/';
-            const target = document.getElementById('footer-content-target');
-            const accordion = document.getElementById('footer-accordion');
+	<!-- インクルード＆切り替えスクリプト -->
+	<script>
+		/**
+		 * フッターの中身をサクッと切り替える関数
+		 */
+		function switchFooterContent(event, fileName) {
+			// 1. ブラウザが勝手に<details>を閉じたり開いたりするデフォルト挙動を完全にブロック
+			event.preventDefault();
+			event.stopPropagation();
+			
+			const basePath = 'html/';
+			const target = document.getElementById('footer-content-target');
+			const accordion = document.getElementById('footer-accordion');
 
-            // 基本は中身を切り替えてアコーディオンを確実に開きます
-            accordion.open = true;
+			// 2. メニューがクリックされたら、確実にアコーディオンを展開状態にする
+			accordion.open = true;
 
-            // タブの選択状態（色など）を切り替え
-            document.querySelectorAll('.footer-tab').forEach(tab => tab.classList.remove('active'));
-            if (event.target) {
-                event.target.classList.add('active');
-            }
+			// 3. クリックされた要素（タブ）を正確に取得してアクティブ化
+			const clickedTab = event.currentTarget;
+			document.querySelectorAll('.footer-tab').forEach(tab => tab.classList.remove('active'));
+			clickedTab.classList.add('active');
 
-            // HTMLを fetch して中身を入れ替える
-            fetch(basePath + fileName)
-                .then(response => {
-                    if (!response.ok) throw new Error(`エラー: ${response.status}`);
-                    return response.text();
-                })
-                .then(data => {
-                    if (target) target.innerHTML = data;
-                })
-                .catch(err => console.error(`${fileName} の読み込みに失敗:`, err));
-        }
+			// 4. HTMLを fetch して中身を入れ替える
+			fetch(basePath + fileName)
+				.then(response => {
+					if (!response.ok) throw new Error(`エラー: ${response.status}`);
+					return response.text();
+				})
+				.then(data => {
+					if (target) target.innerHTML = data;
+				})
+				.catch(err => console.error(`${fileName} の読み込みに失敗:`, err));
+		}
 
-        // 初期状態として「ご利用にあたって」を最初にセットしておく（自動で開かせない）
-        window.addEventListener('DOMContentLoaded', () => {
-            fetch('html/terms.html')
-                .then(r => r.text())
-                .then(data => {
-                    document.getElementById('footer-content-target').innerHTML = data;
-                });
-        });
-    </script>
+		// 初期状態として「ご利用にあたって」を最初にセットしておく
+		window.addEventListener('DOMContentLoaded', () => {
+			fetch('html/terms.html')
+				.then(r => {
+					if (!r.ok) throw new Error(`初期読み込みエラー: ${r.status}`);
+					return r.text();
+				})
+				.then(data => {
+					const target = document.getElementById('footer-content-target');
+					if (target) target.innerHTML = data;
+				})
+				.catch(err => console.error("初期設定に失敗:", err));
+		});
+	</script>
 </body>
 </html>
