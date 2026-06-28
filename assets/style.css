@@ -345,5 +345,21 @@ p { font-size: 14px; color: #e0e0e0; line-height: 1.6; }
     font-size: 11px;
     color: #aaaaaa;
     line-height: 1.6;
-    margin: 0 0 12px 64px;
+    margin: 0 0 12px 0px;
+}
+
+/* 【階層1】h3の後に続く p（インラインをブロック化してインデント浅め） */
+.nostr-about-container h3 ~ span {
+    font-size: 11px;
+    color: #aaaaaa;
+    line-height: 1.6;
+    margin: 0 0 12px 32px; /* 左マージン 32px */
+}
+
+/* 【階層2】h5の直後に来る p（インデント深め） */
+.nostr-about-container h5 + p {
+    font-size: 11px;
+    color: #aaaaaa;
+    line-height: 1.6;
+    margin: 0 0 12px 64px; /* 左マージン 64px */
 }
