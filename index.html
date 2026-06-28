@@ -36,6 +36,48 @@
         
         <p>「Nostrならどこでもコメント欄を配置できるのでは」という興味だけで Nostrurl を作っている実験場。</p>
 
+		<!-- 動作環境 -->
+        <h2>動作環境（あいまい）</h2>
+        <div class="setup-container" style="margin-bottom: 2.5rem;">
+            <p style="margin-bottom: 12px; font-weight: bold;">【必要なもの】</p>
+            <ul style="margin: 0 0 24px 0; padding-left: 20px; line-height: 1.6; font-size: 14px;">
+                <li>インターネットブラウザ（Chrome、Safari、Firefox、Brave など）</li>
+                <li>ブラウザ拡張アドイン（「Tampermonkey」や「GreaseMonkey」など）</li>
+                <li>Nostr署名拡張（「nos2x」「Alby」「Nostash」など）</li>
+                <li>Nostrurlユーザースクリプト（このサイトで配布しているもの）</li>
+            </ul>
+            
+            <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                <thead>
+                    <tr style="border-bottom: 2px solid #333; text-align: left;">
+                        <th style="padding: 8px 8px 8px 0; width: 90px;">デバイス</th>
+                        <th style="padding: 8px;">動作目安</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr style="border-bottom: 1px solid #333;">
+                        <td style="padding: 14px 8px 14px 0; font-weight: bold; vertical-align: top;">PC</td>
+                        <td style="padding: 14px 8px; line-height: 1.6;">
+                            <b>Windows、macOS、Linux</b><br>
+                            <span style="color: #aaa;">ブラウザ拡張を使えるブラウザなら、たぶんどれでも動きます。</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 14px 8px 14px 0; font-weight: bold; vertical-align: top;">スマホ</td>
+                        <td style="padding: 14px 8px; line-height: 1.6;">
+                            <b>Android、iOS</b><br>
+                            <span style="color: #aaa;">「Tampermonkey」や「GreaseMonkey」などのブラウザ拡張を使えるブラウザなら、たぶん動きます。</span>
+                            <div style="margin-top: 6px; font-size: 13px; color: #e0e0e0;">
+                                📁 <b>Androidなら：</b>「Firefox」+「Tampermonkey」+「nos2x」で動作確認済。<br>
+                                📁 <b>iOS（iPhone/iPad）なら：</b>「Safari」+「Tampermonkey」+「Nostash」なら使えるかも？
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+			<p>必要なもののリンクは下記</p>
+        </div>
+
         <!-- 成果物の配布 -->
         <h2>成果物の配布</h2>
         <div class="setup-container">
@@ -53,6 +95,7 @@
                                 <ul>
                                     <li><a href="https://chromewebstore.google.com/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo?hl=ja&pli=1" target="_blank" class="sub-link">Chrome系 Tampermonkey</a></li>
                                     <li><a href="https://addons.mozilla.org/ja/firefox/addon/tampermonkey/" target="_blank" class="sub-link">Firefox Tampermonkey</a></li>
+									<li><a href="https://apps.apple.com/us/app/tampermonkey/id6738342400" target="_blank" class="sub-link">Safari Tampermonkey</a></li>
                                 </ul>
                             </li>
                         </ul>
@@ -65,7 +108,7 @@
                         <summary> 各種ストア・配布元リンクを開く</summary>
                         <ul class="setup-links-list">
                             <li>
-                                <b><a href="https://github.com/fiatjaf/nos2x" target="_blank" class="main-link">nos2x (Nostr拡張機能)</a></b>
+                                <b><a href="https://github.com/fiatjaf/nos2x" target="_blank" class="main-link">nos2x (Nostr署名拡張機能)</a></b>
                                 <ul>
                                     <li><a href="https://chromewebstore.google.com/detail/kpgefcfmnafjgpblomihpgmejjdanjjp?hl=ja" target="_blank" class="sub-link">Chrome系 nos2x</a></li>
                                     <li><a href="https://addons.mozilla.org/ja/firefox/addon/nos2x-fox/" target="_blank" class="sub-link">Firefox nos2x</a></li>
@@ -76,6 +119,11 @@
                                 <ul>
                                     <li><a href="https://chromewebstore.google.com/detail/alby-bitcoin-lightning-wa/iikmkjmpaadaobahmlepeloendndfphd" target="_blank" class="sub-link">Chrome系 Alby</a></li>
                                     <li><a href="https://addons.mozilla.org/ja/firefox/addon/alby/" target="_blank" class="sub-link">Firefox Alby</a></li>
+                                </ul>
+                            <li>
+                                <b><a href="https://apps.apple.com/jp/app/nostash/id6744309333" target="_blank" class="main-link">Nostash (iOS用 Nostr署名拡張機能)</a></b>
+								<ul>
+                                    <li><a href="https://apps.apple.com/jp/app/nostash/id6744309333" target="_blank" class="sub-link">Nostash</a></li>
                                 </ul>
                             </li>
                         </ul>
