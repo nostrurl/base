@@ -54,7 +54,7 @@
 	// 4. フィルター判定ロジック
     function shouldBlockByFilter() {
         try {
-            // ✨ 修正：localStorage ではなく GM_getValue から全サイト共通の設定を読み込む
+            // localStorage ではなく GM_getValue から全サイト共通の設定を読み込む
             const saved = GM_getValue('nostrurl_global_config');
             if (!saved) return false;
 
@@ -82,7 +82,7 @@
             if (event.data && event.data.type === 'NOSTRURL_FILTER_UPDATE') {
                 const { filterMode, filterDomains } = event.data;
 
-                // ✨ 修正：メッセージを受け取ったら、即座に全サイト共通ストレージ（GM_setValue）に保存する
+                // メッセージを受け取ったら、即座に全サイト共通ストレージ（GM_setValue）に保存する
                 const newConfig = { FILTER_MODE: filterMode, FILTER_DOMAINS: filterDomains };
                 GM_setValue('nostrurl_global_config', JSON.stringify(newConfig));
                 
@@ -232,7 +232,7 @@
 
 	// ─── 各種インジェクション・パージ処理 ───
     async function fetchAndInjectEverything(iframe) {
-        // ✨ あなたが一生懸命作ってくれた最高のデザイン（そのままキープ！）
+        // 通信出来なかった際に表示するメッセージ
         const cspNoticeHTML = `
             <div style="color: #ff5252; background: #1a1a1a; padding: 20px; font-family: sans-serif; font-size: 14px; line-height: 1.6; text-align: center;">
                 <div style="font-size: 24px; margin-bottom: 10px;">⚠️</div>

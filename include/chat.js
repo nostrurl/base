@@ -98,7 +98,7 @@ const reconnectTimeouts = new Map();
 const urlParams = new URLSearchParams(window.location.search);
 const currentUrl = window.REAL_PARENT_URL || urlParams.get('url') || window.location.href || "about:blank";
 
-// list.js の関数を使用してドメイン抽出
+// domain-filter.js の関数を使用してドメイン抽出
 const currentDomain = window.NostrFilterManager.extractDomain(currentUrl); 
 
 let nostrUrlTargetKey = generateTargetKey(currentUrl, currentConfig);
@@ -125,7 +125,7 @@ const activeKeyDisp = document.getElementById('active-key-disp');
 const displayKeySpan = document.getElementById('display-key');
 const connStatusDisp = document.getElementById('connection-status');
 
-// 新機能用DOM要素（list.jsに渡すためにオブジェクトにまとめる）
+// 新機能用DOM要素（domain-filter.jsに渡すためにオブジェクトにまとめる）
 const filterElements = {
     guiFilterMode: document.getElementById('gui-filter-mode'),
     guiFilterToggleCurrentBtn: document.getElementById('gui-filter-toggle-current-btn'),
@@ -280,7 +280,7 @@ function renderGuiRelayList() {
         li.innerHTML = `<span>${url}</span>`;
         const delBtn = document.createElement('button');
         delBtn.className = 'gui-btn-del';
-        delBtn.innerText = '削除';
+        delBtn.innerText = '解除';
         delBtn.onclick = () => {
             currentConfig.RELAY_URLS = currentConfig.RELAY_URLS.filter(u => u !== url);
             saveConfig(currentConfig);
