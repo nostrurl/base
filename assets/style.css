@@ -397,7 +397,7 @@ footer {
 .disclaimer-content a {
     color: #e0e0e0 !important; /* クリック前後に関わらず明るいグレーに固定 */
     text-decoration: none !important; /* 標準の下線を消す */
-    border-bottom: 1px solid #6a1b9a !important; /* 下部に薄い紫の線を引く */
+    // border-bottom: 1px solid #6a1b9a !important; /* 下部に薄い紫の線を引く */
     padding-bottom: 2px;
     transition: border-color 0.2s;
 }
