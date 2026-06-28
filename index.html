@@ -110,20 +110,17 @@
 
 		<!-- フッター -->
 		<footer>
-            <div class="footer-addons">
+			<!-- アコーディオン -->
+            <details class="footer-disclaimer" id="footer-accordion">
+                <summary>
+                    <!-- クリックしてもアコーディオンが閉じないように、クリックイベントを制御するメニューボタン -->
+                    <span class="footer-tab active" onclick="switchFooterContent(event, 'terms.html')">ご利用にあたって</span>
+                    <span class="footer-tab" onclick="switchFooterContent(event, 'nostr-about.html')">Nostrとは？</span>
+                </summary>
                 
-                <!-- 利用規約・免責事項 -->
-                <details class="footer-disclaimer" id="nostr-terms-details">
-                    <summary>ご利用にあたって</summary>
-                    <div class="disclaimer-content" id="nostr-terms-target"></div>
-                </details>
-                
-                <!-- Nostrとは？ -->
-                <details class="footer-disclaimer" id="nostr-about-details">
-                    <summary>Nostrとは？</summary>
-                    <!-- 💡 ここに nostr-about-target を確実に指定 -->
-                    <div class="disclaimer-content" id="nostr-about-target"></div>
-                </details>
+                <!-- 選択されたHTMLの中身がここにサクッと流し込まれる -->
+                <div class="disclaimer-content" id="footer-content-target"></div>
+            </details>
 
             </div>
 

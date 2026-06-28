@@ -312,8 +312,8 @@
 /* --- 別ファイルから読み込んだNostr解説文のスタイル --- */
 .nostr-about-container h3 {
     font-size: 14px;
-    color: #ffffff !important;
-    margin: 0 0 16px 0 !important;
+    color: ##b388ff !important;
+    margin: 0 0 16px 16px !important;
     border: none !important;
     padding: 0 !important;
     font-weight: bold;
@@ -322,14 +322,14 @@
 .nostr-about-container h4 {
     font-size: 13px;
     color: #b388ff; /* アクセントカラー（お好みの色に） */
-    margin: 32px 0 16px 0;
+    margin: 32px 0 16px 32px;
     font-weight: bold;
 }
 
 .nostr-about-container h5 {
     font-size: 12px;
-    color: #ffffff;
-    margin: 16px 0 4px 0;
+    color: #b388ff;
+    margin: 16px 0 4px 48px;
     font-weight: bold;
 }
 
@@ -337,5 +337,5 @@
     font-size: 11px;
     color: #aaaaaa;
     line-height: 1.6;
-    margin: 0 0 12px 0;
+    margin: 0 0 12px 64;
 }
