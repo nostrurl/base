@@ -306,12 +306,33 @@ footer {
     margin-bottom: 0;
 }
 
-/* 著作権表示 */
+/* --- 著作権表示エリア全体の調整（並べる箱） --- */
+.copyright-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    
+    /* フレックスボックスと干渉させないために、borderではなく疑似要素で線を引く */
+    position: relative;
+    margin-top: 40px;
+    padding-top: 24px;
+}
+
+/* 著作権の上のボーダー専用の指定 */
+.copyright-wrapper::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    border-top: 1px solid #333; /* ここで綺麗な1本線を引く */
+}
+
+/* 著作権のテキスト単体の装飾（既存の設定をマージ） */
 .copyright {
-    font-size: 12px;
-    color: #666666;
-    margin: 40px 0 0 0;
-	padding-top: 32px;
+    font-size: 11px; /* HTMLの指定(11px)と統一 */
+    color: #aaaaaa;
     letter-spacing: 0.5px;
     text-align: center;
 }
@@ -347,18 +368,26 @@ footer {
     margin: 0 0 12px 0px;
 }
 
-/* 【階層1】h3の後に続く p（インラインをブロック化してインデント浅め） */
+/* h3の後に続く p */
 .nostr-about-container h3 ~ p {
     font-size: 11px;
     color: #aaaaaa;
     line-height: 1.6;
-    margin: 0 0 12px 32px; /* 左マージン 32px */
+    margin: 0 0 12px 32px;
 }
 
-/* 【階層2】h5の直後に来る p（インデント深め） */
+/* h4の後に続く p */
+.nostr-about-container h4 ~ p {
+	font-size: 11px;
+    color: #aaaaaa;
+    line-height: 1.6;
+    margin: 0 0 12px 48px;
+}
+
+/* h5の直後に来る p */
 .nostr-about-container h5 ~ p {
     font-size: 11px;
     color: #aaaaaa;
     line-height: 1.6;
-    margin: 0 0 12px 64px; /* 左マージン 64px */
+    margin: 0 0 12px 64px;
 }
