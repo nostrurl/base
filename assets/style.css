@@ -232,6 +232,10 @@ p { font-size: 14px; color: #e0e0e0; line-height: 1.6; }
 }
 
 /* --- フッターエリア基本スタイル --- */
+footer { 
+    margin: 40px 0 0 0; border-bottom: 1px solid #333; padding-bottom: 6px; 
+}
+
 
 /* アコーディオン全体の幅・配置調整 */
 .footer-disclaimer {
