@@ -339,3 +339,36 @@
     line-height: 1.6;
     margin: 0 0 12px 64;
 }
+
+/* ==========================================================================
+   フッターメニュー（タブ切り替えスタイル）
+   ========================================================================== */
+
+/* 2つのメニュー文字を横並びにして中央寄せ */
+.footer-disclaimer summary {
+    display: inline-flex !important; /* 三角マークを消しつつ横並び */
+    justify-content: center;
+    gap: 20px;
+    width: 100%;
+}
+
+/* メニューのボタン（文字）のスタイル */
+.footer-tab {
+    cursor: pointer;
+    padding: 2px 8px;
+    color: #888888;
+    transition: color 0.2s, border-bottom 0.2s;
+    border-bottom: 2px solid transparent;
+}
+
+/* ホバー時 */
+.footer-tab:hover {
+    color: #a370f7; /* Nostrurlのメインカラーに合わせる */
+}
+
+/* 選択中のタブを強調 */
+.footer-tab.active {
+    color: #a370f7;
+    font-weight: bold;
+    border-bottom: 2px solid #a370f7;
+}

@@ -156,36 +156,52 @@
         </footer>
     </div>
 
-<!-- インクルード用スクリプト -->
+<!-- インクルード＆切り替えスクリプト -->
 <script>
     /**
-     * 外部HTMLファイルを指定した要素に非同期で読み込む関数
-     * @param {string} fileName - 読み込むHTMLファイル名（拡張子付き）
-     * @param {string} targetId - 挿入先要素のID
+     * フッターの中身をサクッと切り替える関数
+     * @param {Event} event - クリックイベント
+     * @param {string} fileName - 読み込むHTMLファイル名
      */
-    function includeHTML(fileName, targetId) {
-        // 今後「html/」フォルダへのパス
-        const basePath = 'html/'; 
+    function switchFooterContent(event, fileName) {
+        // summary内のボタンクリックでアコーディオンがパチパチ閉じないようにする
+        event.stopPropagation();
         
+        const basePath = 'html/';
+        const target = document.getElementById('footer-content-target');
+        const accordion = document.getElementById('footer-accordion');
+
+        // 既にアコーディオンが開いている状態で、同じメニューが押されたら閉じるような挙動にしたい場合は調整可能ですが、
+        // 基本は中身を切り替えてアコーディオンを確実に開きます
+        accordion.open = true;
+
+        // タブの選択状態（色など）を切り替え
+        document.querySelectorAll('.footer-tab').forEach(tab => tab.classList.remove('active'));
+        if (event.target) {
+            event.target.classList.add('active');
+        }
+
+        // HTMLを fetch して中身を入れ替える
         fetch(basePath + fileName)
             .then(response => {
-                if (!response.ok) {
-                    throw new Error(`ネットワークエラー: ${response.status}`);
-                }
+                if (!response.ok) throw new Error(`エラー: ${response.status}`);
                 return response.text();
             })
             .then(data => {
-                const target = document.getElementById(targetId);
-                if (target) {
-                    target.innerHTML = data;
-                }
+                if (target) target.innerHTML = data;
             })
-            .catch(err => console.error(`${fileName} の読み込みに失敗しました:`, err));
+            .catch(err => console.error(`${fileName} の読み込みに失敗:`, err));
     }
 
-    // --- ここに読み込みたいファイルを並べる ---
-	includeHTML('terms.html', 'nostr-terms-target');
-    includeHTML('nostr-about.html', 'nostr-about-target');
+    // 💡 初期状態として「ご利用にあたって」を最初にセットしておく（自動で開かせない）
+    // ページ読み込み時に裏で中身だけ入れておきます
+    window.addEventListener('DOMContentLoaded', () => {
+        fetch('html/terms.html')
+            .then(r => r.text())
+            .then(data => {
+                document.getElementById('footer-content-target').innerHTML = data;
+            });
+    });
 </script>
 	
 </body>
