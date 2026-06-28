@@ -110,20 +110,21 @@
 
 		<!-- フッター -->
         <footer>
-            <!-- 免責事項アコーディオン -->
-            <details class="footer-disclaimer">
-                <summary>ご利用にあたって</summary>
-                <div class="disclaimer-content">
-                    <ul>
-                        <li><strong>投稿の責任:</strong> 本ツールを利用した投稿の責任は、投稿者本人に帰属します。</li>
-                        <li><strong>権利の所在:</strong> 投稿データの著作権や利用権の扱いは、利用するリレーサーバーの規約に依存します。リレーによっては規約により権利の帰属が規定されている場合があるため、ご自身でご確認ください。</li>
-                        <li><strong>データ保持:</strong> 投稿データはリレー上に保存されます。Nostrurlはデータを保持・管理・削除する権限を有しません。</li>
-                        <li><strong>削除依頼について:</strong> 個別の投稿削除依頼には対応できません。これはNostrurlが一切の投稿データを保有していないためです。投稿先のリレー管理者へ、署名に使用した拡張機能等から削除依頼を行ってください。</li>
-                        <li><strong>免責:</strong> 本ツールの利用により生じたいかなる損害についても、管理人は一切の責任を負いません。</li>
-                        <li><strong>感謝:</strong> 初期設定のリレーサーバー様、Nostrに携わる人たちに、心より感謝致します。</li>
-                    </ul>
-                </div>
-            </details>
+            <div class="footer-addons">
+                
+                <!-- 利用規約・免責事項（JSインクルード） -->
+                <details class="footer-disclaimer" id="nostr-terms-details">
+                    <summary>ご利用にあたって</summary>
+                    <div class="disclaimer-content" id="nostr-terms-target"></div>
+                </details>
+                
+                <!-- Nostrとは？（JSインクルード） -->
+                <details class="footer-disclaimer" id="nostr-about-details">
+                    <summary>Nostrとは？</summary>
+                    <div class="disclaimer-content" id="nostr-about-target"></div>
+                </details>
+
+            </div>
 
 			<!-- 著作権表示（フレックスボックスで強制横並び＆中央揃え） -->
 			<div style="display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 11px; color: #aaa; margin-top: 15px;">
@@ -156,5 +157,38 @@
 			</div>
         </footer>
     </div>
+
+<!-- インクルード用スクリプト -->
+<script>
+    /**
+     * 外部HTMLファイルを指定した要素に非同期で読み込む関数
+     * @param {string} fileName - 読み込むHTMLファイル名（拡張子付き）
+     * @param {string} targetId - 挿入先要素のID
+     */
+    function includeHTML(fileName, targetId) {
+        // 今後「html/」フォルダへのパス
+        const basePath = 'html/'; 
+        
+        fetch(basePath + fileName)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`ネットワークエラー: ${response.status}`);
+                }
+                return response.text();
+            })
+            .then(data => {
+                const target = document.getElementById(targetId);
+                if (target) {
+                    target.innerHTML = data;
+                }
+            })
+            .catch(err => console.error(`${fileName} の読み込みに失敗しました:`, err));
+    }
+
+    // --- ここに読み込みたいファイルを並べる ---
+    includeHTML('nostr-about.html', 'nostr-about-target'); // ご利用にあたって
+    includeHTML('terms.html', 'nostr-about-target'); // Nostrとは？
+</script>
+	
 </body>
 </html>
