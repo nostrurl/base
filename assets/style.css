@@ -391,3 +391,19 @@ footer {
     line-height: 1.6;
     margin: 0 0 12px 64px;
 }
+
+/* --- フッター等で読み込まれる別ファイル内のリンクスタイル --- */
+.nostr-about-container a, 
+.disclaimer-content a {
+    color: #e0e0e0 !important; /* クリック前後に関わらず明るいグレーに固定 */
+    text-decoration: none !important; /* 標準の下線を消す */
+    border-bottom: 1px solid #6a1b9a !important; /* 下部に薄い紫の線を引く */
+    padding-bottom: 2px;
+    transition: border-color 0.2s;
+}
+
+/* リンクをホバーした時だけ、線を少し明るくする（親切設計） */
+.nostr-about-container a:hover, 
+.disclaimer-content a:hover {
+    border-bottom-color: #b388ff !important;
+}
