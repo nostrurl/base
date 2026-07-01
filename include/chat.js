@@ -150,16 +150,22 @@ if (filterElements.guiFilterMode) {
     filterElements.guiFilterMode.value = currentConfig.FILTER_MODE || 'off';
 }
 
-// 初期状態はチャット画面（通常表示）にし、設定とマニュアルのコンテナを確実に隠す
-if (commentBox) commentBox.style.display = 'block'; 
+// 初期状態はコメント欄を「フル表示」にする
+if (commentBox) {
+    commentBox.classList.remove('hide-element');
+    commentBox.style.display = 'block'; // コメント欄を最初から全開にする
+}
 
+// ライブ設定とマニュアルは、初期状態で絶対に領域を確保させず完全に隠す
 if (configBox) {
     configBox.classList.remove('show-element');
-    configBox.style.display = 'none'; // CSSの初期状態に合わせる
+    configBox.classList.add('hide-element');
+    configBox.style.display = 'none';
 }
 if (manualBox) {
     manualBox.classList.remove('show-element');
-    manualBox.style.display = 'none'; // マニュアル側も明示的に非表示
+    manualBox.classList.add('hide-element');
+    manualBox.style.display = 'none';
 }
 
 // --- 6. 処理ロジック ---
@@ -340,44 +346,54 @@ const executeSubmit = async () => {
 // --- 7. ビュー（表示切り替え）の一元管理ロジック ---
 function switchView(target) {
     if (activeView === target) {
-        // 同じボタンを押した場合はチャット（通常状態）に戻す
+        // 開いている画面のボタンをもう一度押したら、通常のチャット画面に戻す
         activeView = 'chat';
     } else {
         activeView = target;
     }
 
-    // 1. チャット欄の表示・非表示を切り替え
+    // 1. チャット欄（#comments）の切り替え
     if (commentBox) {
-        commentBox.style.display = (activeView === 'chat') ? 'block' : 'none';
-    }
-    
-    // 2. ⚙️ライブ設定コンテナ（#manual-view）の切り替え
-    if (configBox) {
-        if (activeView === 'config') {
-            configBox.style.display = 'block'; // 領域を確保させて綺麗に浮かす
-            configBox.classList.add('show-element');
+        if (activeView === 'chat') {
+            commentBox.classList.remove('hide-element');
+            commentBox.style.display = 'block';
         } else {
-            configBox.style.display = 'none';
-            configBox.classList.remove('show-element');
+            commentBox.classList.add('hide-element');
+            commentBox.style.display = 'none';
         }
     }
     
-    // 3. 📜ヘルプマニュアルコンテナ（#manual-content-view）の切り替え
+    // 2. ⚙️歯車マークに対応：ライブ設定コンテナ（#manual-view）
+    if (configBox) {
+        if (activeView === 'config') {
+            configBox.classList.remove('hide-element');
+            configBox.classList.add('show-element');
+            configBox.style.display = 'block';
+        } else {
+            configBox.classList.remove('show-element');
+            configBox.classList.add('hide-element');
+            configBox.style.display = 'none';
+        }
+    }
+    
+    // 3. 📜マニュアルマークに対応：ヘルプマニュアルコンテナ（#manual-content-view）
     if (manualBox) {
         if (activeView === 'manual') {
-            manualBox.style.display = 'block';
+            manualBox.classList.remove('hide-element');
             manualBox.classList.add('show-element');
+            manualBox.style.display = 'block';
         } else {
-            manualBox.style.display = 'none';
             manualBox.classList.remove('show-element');
+            manualBox.classList.add('hide-element');
+            manualBox.style.display = 'none';
         }
     }
 
-    // ボタンのアイコン（💬 ⇄ ⚙️/📜）の表示を同期
+    // 各ボタンのアイコン（開いている時は「💬」に戻るトグル仕様）を同期
     if (menuBtn) menuBtn.innerText = (activeView === 'config') ? '💬' : '⚙️';
     if (manualBtn) manualBtn.innerText = (activeView === 'manual') ? '💬' : '📜';
 
-    // 画面が戻ったか開いたかに応じたデータ更新
+    // 画面がチャットに戻ったか、設定を開いたかに応じた処理
     if (activeView === 'chat') {
         renderComments();
     } else if (activeView === 'config') {
@@ -389,15 +405,16 @@ function switchView(target) {
     }
 }
 
+
 // --- 8. 初期化とイベントリスナー設定 ---
 startPublicKeyMonitor();
 
-// ⚙️ ライブ設定ボタンクリック
+// 💡 【修正】歯車マーク（menuBtn）を押したら「ライブ設定（config）」を開く
 if (menuBtn) {
     menuBtn.onclick = () => switchView('config');
 }
 
-// 📜 ヘルプマニュアルボタンクリック
+// 💡 【修正】マニュアルマーク（manualBtn）を押したら「ヘルプマニュアル（manual）」を開く
 if (manualBtn) {
     manualBtn.onclick = () => switchView('manual');
 }
