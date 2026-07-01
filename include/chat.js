@@ -56,16 +56,20 @@ const DEFAULT_CONFIG = {
 
 // --- 2. 関数定義 ---
 function loadConfig() {
-    const saved = typeof GM_getValue !== 'undefined' 
-        ? GM_getValue('nostrurl_config') 
-        : localStorage.getItem('nostrurl_config');
+    // ローカルストレージは完全撤廃、GM領域のみを見る
+    const saved = typeof GM_getValue !== 'undefined' ? GM_getValue('nostrurl_config') : null;
 
     const defaultCopy = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
     if (saved) {
         try {
             const parsed = typeof saved === 'string' ? JSON.parse(saved) : saved;
-            // parsed の中身を defaultCopy で包み込んで、足りない項目（RELAY_URLS等）を絶対に補完する
-            return Object.assign({}, defaultCopy, parsed);
+            
+            // 💡 1階層目をマージしたあと、配列（2階層目）はストレージ側の最新データを絶対最優先で上書きする
+            const merged = Object.assign({}, defaultCopy, parsed);
+            if (parsed.RELAY_URLS) merged.RELAY_URLS = [...parsed.RELAY_URLS];
+            if (parsed.FILTER_DOMAINS) merged.FILTER_DOMAINS = [...parsed.FILTER_DOMAINS];
+            
+            return merged;
         } catch (e) { 
             console.error("Config parse error:", e); 
             return defaultCopy;
@@ -151,23 +155,7 @@ function generateTargetKey(url, config) {
 }
 
 // --- 3. 変数の初期化 ---
-// グローバル設定の読み込み初期化
-let currentConfig = (() => {
-    try {
-        const saved = typeof GM_getValue !== 'undefined' 
-            ? GM_getValue('nostrurl_config') 
-            : localStorage.getItem('nostrurl_config');
-            
-        if (saved) {
-            const parsed = typeof saved === 'string' ? JSON.parse(saved) : saved;
-            // ここも確実にデフォルトの構造と合体させる
-            return Object.assign({}, JSON.parse(JSON.stringify(DEFAULT_CONFIG)), parsed);
-        }
-    } catch (e) {
-        console.error("初期設定の読み込みに失敗:", e);
-    }
-    return JSON.parse(JSON.stringify(DEFAULT_CONFIG));
-})();
+let currentConfig = loadConfig();
 const sockets = new Map();
 const activeSubs = new Map();
 const reconnectTimeouts = new Map(); 
