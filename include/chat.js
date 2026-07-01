@@ -150,6 +150,17 @@ if (filterElements.guiFilterMode) {
     filterElements.guiFilterMode.value = currentConfig.FILTER_MODE || 'off';
 }
 
+// 初期状態（起動時）はチャット画面のみ表示し、設定とマニュアルは完全に隠す
+if (commentBox) commentBox.classList.remove('hide-element');
+if (configBox) {
+    configBox.classList.remove('show-element');
+    configBox.classList.add('hide-element');
+}
+if (manualBox) {
+    manualBox.remove('show-element');
+    manualBox.classList.add('hide-element');
+}
+
 // --- 6. 処理ロジック ---
 function updateStatusUI() {
     if (!connStatusDisp || !displayKeySpan) return;
