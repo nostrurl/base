@@ -114,10 +114,10 @@ let activeView = 'chat'; // 'chat' | 'config' | 'manual'
 // --- 4. DOM要素の取得 ---
 document.getElementById('header-icon').src = chrome.runtime.getURL('icon.png');
 const commentBox = document.getElementById('comments');
-const configBox = document.getElementById('manual-view'); // ⚙️ライブ設定コンテナ (config.html側)
-const manualBox = document.getElementById('manual-content-view'); // 📜ヘルプマニュアルコンテナ (manual.html側)
+const configBox = document.getElementById('config-view'); // ⚙️ライブ設定コンテナ (config.html側)
+const manualBox = document.getElementById('manual-view'); // 📜ヘルプマニュアルコンテナ (manual.html側)
 
-const menuBtn = document.getElementById('menu-btn'); // ⚙️ボタン
+const configBtn = document.getElementById('config-btn'); // ⚙️ボタン
 const manualBtn = document.getElementById('manual-btn'); // 📜ボタン
 
 const inputArea = document.getElementById('input');
@@ -363,7 +363,7 @@ function switchView(target) {
         }
     }
     
-    // 2. ⚙️歯車マークに対応：ライブ設定コンテナ（#manual-view）
+    // 2. ⚙️歯車マークに対応：ライブ設定コンテナ（#config-view）
     if (configBox) {
         if (activeView === 'config') {
             configBox.classList.remove('hide-element');
@@ -390,7 +390,7 @@ function switchView(target) {
     }
 
     // 各ボタンのアイコン（開いている時は「💬」に戻るトグル仕様）を同期
-    if (menuBtn) menuBtn.innerText = (activeView === 'config') ? '💬' : '⚙️';
+    if (configBtn) configBtn.innerText = (activeView === 'config') ? '💬' : '⚙️';
     if (manualBtn) manualBtn.innerText = (activeView === 'manual') ? '💬' : '📜';
 
     // 画面がチャットに戻ったか、設定を開いたかに応じた処理
@@ -409,9 +409,9 @@ function switchView(target) {
 // --- 8. 初期化とイベントリスナー設定 ---
 startPublicKeyMonitor();
 
-// 💡 【修正】歯車マーク（menuBtn）を押したら「ライブ設定（config）」を開く
-if (menuBtn) {
-    menuBtn.onclick = () => switchView('config');
+// 💡 【修正】歯車マーク（configBtn）を押したら「ライブ設定（config）」を開く
+if (configBtn) {
+    configBtn.onclick = () => switchView('config');
 }
 
 // 💡 【修正】マニュアルマーク（manualBtn）を押したら「ヘルプマニュアル（manual）」を開く
