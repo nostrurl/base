@@ -484,6 +484,7 @@ function switchView(target) {
         if (filterElements.guiFilterMode) {
             filterElements.guiFilterMode.value = currentConfig.FILTER_MODE || 'off';
         }
+		renderGuiRelayList();
         window.NostrFilterManager.renderGuiFilterList(currentConfig, currentDomain, filterElements);
     }
 }
