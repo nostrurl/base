@@ -214,7 +214,12 @@ function handleRoomChange() {
             if (activeSubs.has(url)) ws.send(JSON.stringify(["CLOSE", activeSubs.get(url)]));
             const newSubId = 'sub-' + Math.random().toString(36).substr(2, 9);
             activeSubs.set(url, newSubId);
-            ws.send(JSON.stringify(["REQ", newSubId, { "kinds": [1], "#r": [nostrUrlTargetKey], "limit": 50 }]));
+			
+			// Nostrurl仕様：特定のURL（部屋名）50件をGet！
+            // ws.send(JSON.stringify(["REQ", newSubId, { "kinds": [1], "#r": [nostrUrlTargetKey], "limit": 50 }]));
+			
+			// Public仕様：部屋なんて関係ない、最新の投稿（kind:1）を何でも50件Get！
+			ws.send(JSON.stringify(["REQ", newSubId, { "kinds": [1], "limit": 50 }]));
         }
     });
 }
@@ -230,7 +235,12 @@ function connectToRelay(url) {
             isRelayConnected = true; updateStatusUI();
             const subId = 'sub-' + Math.random().toString(36).substr(2, 9);
             activeSubs.set(url, subId);
-            ws.send(JSON.stringify(["REQ", subId, { "kinds": [1], "#r": [nostrUrlTargetKey], "limit": 50 }]));
+            
+			// Nostrurl仕様：特定のURL（部屋名）50件をGet！
+			// ws.send(JSON.stringify(["REQ", subId, { "kinds": [1], "#r": [nostrUrlTargetKey], "limit": 50 }]));
+			
+			// Public仕様：部屋なんて関係ない、最新の投稿（kind:1）を何でも50件Get！
+			ws.send(JSON.stringify(["REQ", subId, { "kinds": [1], "limit": 50 }]));
         };
         ws.onmessage = (event) => {
             const data = JSON.parse(event.data);
