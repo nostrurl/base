@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Nostrurl (ユーザースクリプト版)
 // @namespace    nostrurl.github.io/base/
-// @version      6.7.6
+// @version      6.7.8
 // @description  URLをタグにしたNostrコメント欄を設ける
 // @author       Nostrurl
 // @match        http://*/*
@@ -317,12 +317,6 @@
             const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
             iframeDoc.open();
 
-			// 0. 合成ロジック
-            const insertMarker = '<div id="comments">Loading comments...</div>';
-            if (htmlText.includes(insertMarker)) {
-                htmlText = htmlText.replace(insertMarker, insertMarker + "\n" + configHtmlText + "\n" + manualHtmlText);
-            }
-
             // 1. まずHTMLの全内容を書き込む
             iframeDoc.write(htmlText);
 
@@ -358,8 +352,37 @@
             iframeDoc.close();
             // ---------------------------------------------------------
 
+            const styleElement = iframeDoc.createElement('style');
+            styleElement.textContent = cssText;
+            iframeDoc.head.appendChild(styleElement);
+
             const versionElement = iframeDoc.querySelector('.version-info');
             if (versionElement) versionElement.innerText = typeof GM_info !== 'undefined' ? `v${GM_info.script.version}` : '不正なバージョン';
+
+            let isStorageAvailable = false;
+            try {
+                window.localStorage.setItem('__nostr_test__', '1');
+                window.localStorage.removeItem('__nostr_test__');
+                isStorageAvailable = true;
+            } catch (e) {}
+
+            iframe.contentWindow.REAL_PARENT_URL = targetUrl.toString();
+            iframe.contentWindow.NOSTR_CHAT_ALIVE = false;
+            iframe.contentWindow.PARENT_STORAGE_AVAILABLE = isStorageAvailable;
+
+            // domain-filter.js の流し込み
+            if (filterJsText) {
+                const filterScriptElement = iframeDoc.createElement('script');
+                filterScriptElement.textContent = filterJsText;
+                iframeDoc.body.appendChild(filterScriptElement);
+            }
+
+            // chat.js の流し込み
+            const scriptElement = iframeDoc.createElement('script');
+            scriptElement.textContent = jsText;
+            iframeDoc.body.appendChild(scriptElement);
+            
+            iframeDoc.close();
 
             setTimeout(() => {
                 // もしCSPでチャットのスクリプト実行（NOSTR_CHAT_ALIVE）が止められたら
