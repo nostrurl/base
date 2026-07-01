@@ -56,11 +56,16 @@ const DEFAULT_CONFIG = {
 
 // --- 2. 関数定義 ---
 function loadConfig() {
-    const saved = localStorage.getItem('nostrurl_config');
+    // Tampermonkeyの保存領域（GM_getValue）からまず探す
+    const saved = typeof GM_getValue !== 'undefined' 
+        ? GM_getValue('nostrurl_config') 
+        : localStorage.getItem('nostrurl_config');
+
     const defaultCopy = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
     if (saved) {
         try {
-            const parsed = JSON.parse(saved);
+            // GM_getValue は最初からオブジェクトとして取り出せる場合があるためチェック
+            const parsed = typeof saved === 'string' ? JSON.parse(saved) : saved;
             return { ...defaultCopy, ...parsed };
         } catch (e) { 
             console.error("Config parse error:", e); 
@@ -70,8 +75,22 @@ function loadConfig() {
     return defaultCopy;
 }
 
+// ================= 設定の保存（GM関数によるユーザー主権の確立） =================
+
+// 設定を保存する関数
 function saveConfig(config) {
-    localStorage.setItem('nostrurl_config', JSON.stringify(config));
+    try {
+        // Tampermonkeyの強固な保存領域に保存
+        if (typeof GM_setValue !== 'undefined') {
+            GM_setValue('nostrurl_config', config);
+        } else {
+            localStorage.setItem('nostrurl_config', JSON.stringify(config));
+        }
+    } catch (e) {
+        console.error("設定の保存に失敗したよ:", e);
+    }
+
+    // 親画面への通知（既存ロジック）
     if (window.parent) {
         window.parent.postMessage({
             type: 'NOSTRURL_FILTER_UPDATE',
@@ -79,6 +98,49 @@ function saveConfig(config) {
             filterDomains: config.FILTER_DOMAINS
         }, '*');
     }
+}
+
+// GUI上のリレー一覧をレンダリングする関数（削除ボタン内蔵）
+function renderGuiRelayList() {
+    if (!guiRelayList) return;
+    guiRelayList.innerHTML = '';
+
+    currentConfig.RELAY_URLS.forEach((url, index) => {
+        const item = document.createElement('div');
+        item.style.display = 'flex';
+        item.style.justifyContent = 'space-between';
+        item.style.alignItems = 'center';
+        item.style.marginBottom = '5px';
+
+        const urlSpan = document.createElement('span');
+        urlSpan.innerText = url;
+        item.appendChild(urlSpan);
+
+        const removeBtn = document.createElement('button');
+        removeBtn.innerText = '解除';
+        removeBtn.style.marginLeft = '10px';
+        
+        // ユーザーの意思でリレーを捨てる自由（切断＆削除＆保存）
+        removeBtn.onclick = () => {
+            currentConfig.RELAY_URLS.splice(index, 1);
+            saveConfig(currentConfig); // 変更をGM領域へ保存
+            
+            // 接続中のWebSocketがあれば切断して管理から消す
+            if (sockets.has(url)) {
+                const ws = sockets.get(url);
+                if (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING) {
+                    ws.close();
+                }
+                sockets.delete(url);
+                if (activeSubs.has(url)) activeSubs.delete(url);
+            }
+            
+            renderGuiRelayList(); // UI更新
+        };
+
+        item.appendChild(removeBtn);
+        guiRelayList.appendChild(item);
+    });
 }
 
 function generateTargetKey(url, config) {
@@ -90,7 +152,21 @@ function generateTargetKey(url, config) {
 }
 
 // --- 3. 変数の初期化 ---
-let currentConfig = loadConfig();
+// グローバル設定の読み込み初期化
+let currentConfig = (() => {
+    try {
+        const saved = typeof GM_getValue !== 'undefined' 
+            ? GM_getValue('nostrurl_config') 
+            : localStorage.getItem('nostrurl_config');
+            
+        if (saved) {
+            return typeof saved === 'string' ? JSON.parse(saved) : saved;
+        }
+    } catch (e) {
+        console.error("初期設定の読み込みに失敗:", e);
+    }
+    return JSON.parse(JSON.stringify(DEFAULT_CONFIG)); // コピー
+})();
 const sockets = new Map();
 const activeSubs = new Map();
 const reconnectTimeouts = new Map(); 
@@ -323,28 +399,6 @@ function renderComments() {
         }
     });
     commentBox.scrollTop = commentBox.scrollHeight;
-}
-
-function renderGuiRelayList() {
-    if (!guiRelayList) return;
-    guiRelayList.innerHTML = '';
-    currentConfig.RELAY_URLS.forEach((url, i) => {
-        const li = document.createElement('li');
-        li.className = 'gui-relay-item';
-        li.innerHTML = `<span>${url}</span>`;
-        const delBtn = document.createElement('button');
-        delBtn.className = 'gui-btn-del';
-        delBtn.innerText = '解除';
-        delBtn.onclick = () => {
-            currentConfig.RELAY_URLS = currentConfig.RELAY_URLS.filter(u => u !== url);
-            saveConfig(currentConfig);
-            if (sockets.has(url)) sockets.get(url).close();
-            if (reconnectTimeouts.has(url)) { clearTimeout(reconnectTimeouts.get(url)); reconnectTimeouts.delete(url); }
-            renderGuiRelayList();
-        };
-        li.appendChild(delBtn);
-        guiRelayList.appendChild(li);
-    });
 }
 
 function escapeHtml(str) { return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;"); }
