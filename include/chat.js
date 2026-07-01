@@ -552,6 +552,10 @@ if (inputArea) {
     inputArea.onkeydown = (e) => { if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') executeSubmit(); };
 }
 
+// 接続と描画を開始するまさにこの瞬間に、最新のストレージデータを強制ロードして同期を確定させる
+currentConfig = loadConfig();
+
+// 最新の配列に基づいて接続を開始し、UIを構築する
 currentConfig.RELAY_URLS.forEach(url => connectToRelay(url));
 renderGuiRelayList();
 
