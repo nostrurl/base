@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Nostrurl (ユーザースクリプト版)
 // @namespace    nostrurl.github.io/base/
-// @version      6.7.4
+// @version      6.7.5
 // @description  URLをタグにしたNostrコメント欄を設ける
 // @author       Nostrurl
 // @match        http://*/*
@@ -398,4 +398,21 @@
             iframeDoc.close();
         } catch (e) {}
     }
+	
+	// --- [user.js]側での受信・保存処理 ---
+	window.addEventListener('message', (event) => {
+		// 送信元がこのスクリプトに関連するものであるか確認（セキュリティ対策）
+		if (event.data && event.data.type === 'NOSTRURL_CONFIG_UPDATE') {
+			console.log("[user.js] chat.jsから設定データを受信しました:", event.data.config);
+			
+			// 永続化（GM_setValueを使用）
+			try {
+				GM_setValue('nostrurl_global_config', JSON.stringify(event.data.config));
+				console.log("[user.js] 設定を永続ストレージに保存しました。");
+			} catch (e) {
+				console.error("[user.js] 保存に失敗しました:", e);
+			}
+		}
+	});
+	
 })();
