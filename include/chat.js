@@ -363,7 +363,7 @@ function switchView(target) {
         }
     }
     
-    // 2. ⚙️歯車マークに対応：ライブ設定コンテナ（#config-view）
+    // 2. ⚙️ライブ設定コンテナ（#config-view）
     if (configBox) {
         if (activeView === 'config') {
             configBox.classList.remove('hide-element');
@@ -376,7 +376,7 @@ function switchView(target) {
         }
     }
     
-    // 3. 📜マニュアルマークに対応：ヘルプマニュアルコンテナ（#manual-content-view）
+    // 3. 📜マニュアルコンテナ（#manual-view）
     if (manualBox) {
         if (activeView === 'manual') {
             manualBox.classList.remove('hide-element');
@@ -409,12 +409,12 @@ function switchView(target) {
 // --- 8. 初期化とイベントリスナー設定 ---
 startPublicKeyMonitor();
 
-// 💡 【修正】歯車マーク（configBtn）を押したら「ライブ設定（config）」を開く
+// 歯車マーク（configBtn）を押したら「ライブ設定（config）」を開く
 if (configBtn) {
     configBtn.onclick = () => switchView('config');
 }
 
-// 💡 【修正】マニュアルマーク（manualBtn）を押したら「ヘルプマニュアル（manual）」を開く
+// マニュアルマーク（manualBtn）を押したら「ヘルプマニュアル（manual）」を開く
 if (manualBtn) {
     manualBtn.onclick = () => switchView('manual');
 }
