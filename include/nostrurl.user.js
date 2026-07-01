@@ -317,6 +317,12 @@
             const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
             iframeDoc.open();
 
+			// 0. 合成ロジック
+            const insertMarker = '<div id="comments">Loading comments...</div>';
+            if (htmlText.includes(insertMarker)) {
+                htmlText = htmlText.replace(insertMarker, insertMarker + "\n" + configHtmlText + "\n" + manualHtmlText);
+            }
+
             // 1. まずHTMLの全内容を書き込む
             iframeDoc.write(htmlText);
 
