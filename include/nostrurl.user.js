@@ -314,6 +314,7 @@
 			// ---------------------------------------------------------
             // iframe 構築とデータ同期ブロック
             // ---------------------------------------------------------
+			/*
             const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
             iframeDoc.open();
 
@@ -351,7 +352,7 @@
             // 4. 最後に閉じる
             iframeDoc.close();
             // ---------------------------------------------------------
-
+*/
             const styleElement = iframeDoc.createElement('style');
             styleElement.textContent = cssText;
             iframeDoc.head.appendChild(styleElement);
