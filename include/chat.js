@@ -107,7 +107,6 @@ function renderGuiRelayList() {
     // クラッシュ防止に安全ガードを追加
     if (currentConfig && currentConfig.RELAY_URLS) {
         currentConfig.RELAY_URLS.forEach((url, index) => {
-            // 💡 CSSで定義されている「.gui-relay-item」クラスを適用して枠組みを作る
             const item = document.createElement('div');
             item.className = 'gui-relay-item';
 
@@ -115,7 +114,6 @@ function renderGuiRelayList() {
             urlSpan.innerText = url;
             item.appendChild(urlSpan);
 
-            // 💡 CSSで定義されている「.gui-btn-del」クラスを適用して削除ボタンを作る
             const removeBtn = document.createElement('button');
             removeBtn.className = 'gui-btn-del';
             removeBtn.innerText = '解除';
