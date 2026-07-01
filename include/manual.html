@@ -1,0 +1,73 @@
+<div id="manual-view" class="notranslate hide-element" translate="no">
+    <div class="menu-title">📜 ヘルプ & マニュアル</div>
+    
+    <details>
+        <summary>💡 Nostrurl とは？</summary>
+        <div style="color: #eee; font-size: 12px; padding-top: 4px;">今見ているWebページのURLをタグにして、Nostrのリレーに書き込みをする仕組みです。同じタグを持つ投稿をピックアップし、仮想的な部屋として扱っています。どのサイトでも自由にコメント欄を生成できます。</div>
+    </details>
+
+    <details>
+        <summary>⚖️ ご利用にあたって</summary>
+        <div style="font-size: 11px; color: #888; padding-top: 8px; line-height: 1.4;">
+            <ul style="padding-left: 15px; margin: 0;">
+                <li><strong>投稿の責任:</strong> 本ツールを利用した投稿の責任は、投稿者本人に帰属します。</li>
+                <li><strong>権利の所在:</strong> 投稿データの著作権や利用権の扱いは、利用するリレーサーバーの規約に依存します。リレーによっては規約により権利の帰属が規定されている場合があるため、ご自身でご確認ください。</li>
+                <li><strong>データ保持:</strong> 投稿データはリレー上に保存されます。Nostrurlはデータを保持・管理・削除する権限を有しません。</li>
+                <li><strong>削除依頼について:</strong> 個別の投稿削除依頼には対応できません。これはNostrurlが一切の投稿データを保有していないためです。投稿先のリレー管理者へ、署名に使用した拡張機能等から削除依頼を行ってください。</li>
+                <li><strong>免責:</strong> 本ツールの利用により生じたいかなる損害についても、管理人は一切の責任を負いません。</li>
+                <li><strong>感謝:</strong> 初期設定のリレーサーバー様、Nostrに携わる人たちに、心より感謝致します。</li>
+            </ul>
+        </div>
+    </details>
+
+    <details>
+        <summary>❓ モードの違い</summary>
+        <ul class="mode-desc" style="padding-left: 15px; margin: 0; font-size: 12px;">
+            <li>🌐 <code>url</code> (標準)<br><span style="color: #aaa;">ページURL単体をタグにします。Damusや他アプリのWebサイトコメント機能とそのまま共存できます。<br>用途 : ページに対する一般的なコメントを残したい時。<br>ポイント : 他のNostrアプリとの互換性が高く、最も標準的な使い方です。</span></li>
+            <li style="margin-top: 6px;">🖇️ <code>combined</code> (URL＋部屋名)<br><span style="color: #aaa;">URLに設定した部屋名を合体させてタグを作ります。特定のサイト内に「Nostrurlユーザー専用の秘密の部屋」を作りたい時に最適です。<br>用途 : 同じURLの中で、さらに話題ごとに部屋を分けたい時。<br>ポイント : ページURLの「別室」を作る感覚で使えます。</span></li>
+            <li style="margin-top: 6px;">🚪 <code>room_name</code> (部屋名のみ)<br><span style="color: #aaa;">URLを一切無視して部屋名だけをタグにします。どのWebサイトを開いていても、同じ部屋名を設定した人同士で常時繋がれます。<br>用途 : Webサイトに関係なく、特定のトピックで会話したい時。<br>ポイント : どのURLを開いていても、設定した部屋名の部屋に参加できます。</span></li>
+        </ul>
+    </details>
+    
+    <details>
+        <summary>🔧 必要な拡張機能</summary>
+        <ul style="padding-left: 15px; margin: 0; font-size: 12px;">
+            <li>ブラウザに <b><a href="https://github.com/fiatjaf/nos2x" target="_blank" style="color: #b388ff !important;">nos2x</a></b> や <b><a href="https://getalby.com/" target="_blank" style="color: #b388ff !important;">Alby</a></b>、<b><a href="https://apps.apple.com/jp/app/nostash/id6744309333" target="_blank" style="color: #b388ff !important;">Nostash</a></b> などのNostr拡張機能（NIP-07形式）が必要です。</li>
+            <li>拡張機能側で拡張機能のアクセスや「署名」を許可してください。</li>
+            <li>拡張機能の利用は各自の責任において行ってください。</li>
+        </ul>
+    </details>
+
+    <details>
+        <summary>🔗 リンク</summary>
+        <ul style="margin-top: 6px; padding-left: 20px; font-size: 12px;">
+            <li style="margin-top: 6px;">
+                <b><a href="https://github.com/fiatjaf/nos2x" target="_blank" style="color: #b388ff !important;">nos2x (Nostr署名拡張)</a></b>
+                <ul>
+                    <li><a href="https://chromewebstore.google.com/detail/nos2x/kpgefcfmnafjgpblomihpgmejjdanjjp?hl=ja" target="_blank" style="color: #64b5f6 !important;">Chrome系 nos2x</a></li>
+                    <li><a href="https://addons.mozilla.org/ja/firefox/addon/nos2x-fox/" target="_blank" style="color: #64b5f6 !important;">Firefox nos2x</a></li>
+                </ul>
+            </li>
+            <li style="margin-top: 6px;">
+                <b><a href="https://getalby.com/" target="_blank" style="color: #b388ff !important;">Alby (Bitcoin/Nostrウォレット)</a></b>
+                <ul>
+                    <li><a href="https://chromewebstore.google.com/detail/alby-bitcoin-lightning-wa/iikmkjmpaadaobahmeloendndfphd" target="_blank" style="color: #64b5f6 !important;">Chrome系 Alby</a></li>
+                    <li><a href="https://addons.mozilla.org/ja/firefox/addon/alby/" target="_blank" style="color: #64b5f6 !important;">Firefox Alby</a></li>
+                </ul>
+            </li>
+            <li style="margin-top: 6px;">
+                <b><a href="https://apps.apple.com/jp/app/nostash/id6744309333" target="_blank" style="color: #b388ff !important;">Nostash (iOS用 Nostr署名拡張)</a></b>
+                <ul>
+                    <li><a href="https://apps.apple.com/jp/app/nostash/id6744309333" target="_blank" style="color: #64b5f6 !important;">Nostash</a></li>
+                </ul>
+            </li>
+            <li style="margin-top: 6px;">
+                <b><a href="https://nostrurl.github.io/base/" target="_blank" style="color: #b388ff !important;">Nostrurl</a></b>
+                <ul>
+                    <li><a href="https://nostrurl.github.io/base/" target="_blank" style="color: #64b5f6 !important;">Nostrurl's Lab</a></li>
+                    <li><a href="https://github.com/nostrurl" target="_blank" style="color: #64b5f6 !important;">Nostrurl - GitHub</a></li>
+                </ul>
+            </li>
+        </ul>
+    </details>
+</div>

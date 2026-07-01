@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Nostrurl (ユーザースクリプト版)
 // @namespace    nostrurl.github.io/base/
-// @version      6.6.6
+// @version      6.7.0
 // @description  URLをタグにしたNostrコメント欄を設ける
 // @author       Nostrurl
 // @match        http://*/*
@@ -21,6 +21,8 @@
     if (window.top !== window.self) return;
 
     const GITHUB_RAW_HTML_URL = "https://raw.githubusercontent.com/nostrurl/base/main/include/chat.html";
+    const GITHUB_RAW_CONFIG_URL = "https://raw.githubusercontent.com/nostrurl/base/main/include/config.html"; // 👈 追加
+    const GITHUB_RAW_MANUAL_URL = "https://raw.githubusercontent.com/nostrurl/base/main/include/manual.html"; // 👈 追加
     const GITHUB_RAW_CSS_URL = "https://raw.githubusercontent.com/nostrurl/base/main/include/chat.css";
     const GITHUB_RAW_FILTER_JS_URL = "https://raw.githubusercontent.com/nostrurl/base/main/include/domain-filter.js"; 
     const GITHUB_RAW_JS_URL = "https://raw.githubusercontent.com/nostrurl/base/main/include/chat.js";
@@ -259,9 +261,11 @@
         try {
             const timestamp = Date.now();
             
-            // 特権通信（customFetch）を使って安全にロード
-            const [htmlRes, cssRes, filterJsRes, jsRes, purgeRes] = await Promise.all([
+            // 特権通信（customFetch）を使って安全にロード（configとmanualを配列に追加）
+            const [htmlRes, configHtmlRes, manualHtmlRes, cssRes, filterJsRes, jsRes, purgeRes] = await Promise.all([
                 customFetch(`${GITHUB_RAW_HTML_URL}?t=${timestamp}`).catch(() => null),
+                customFetch(`${GITHUB_RAW_CONFIG_URL}?t=${timestamp}`).catch(() => null), // 👈 追加
+                customFetch(`${GITHUB_RAW_MANUAL_URL}?t=${timestamp}`).catch(() => null), // 👈 追加
                 customFetch(`${GITHUB_RAW_CSS_URL}?t=${timestamp}`).catch(() => null),
                 customFetch(`${GITHUB_RAW_FILTER_JS_URL}?t=${timestamp}`).catch(() => null),
                 customFetch(`${GITHUB_RAW_JS_URL}?t=${timestamp}`).catch(() => null),
@@ -270,7 +274,9 @@
 
             if (!htmlRes || !htmlRes.ok || !cssRes || !cssRes.ok || !jsRes || !jsRes.ok) throw new Error("HTTP_ERROR");
 
-            const htmlText = await htmlRes.text();
+            let htmlText = await htmlRes.text();
+            const configHtmlText = (configHtmlRes && configHtmlRes.ok) ? await configHtmlRes.text() : ""; // 👈 取得
+            const manualHtmlText = (manualHtmlRes && manualHtmlRes.ok) ? await manualHtmlRes.text() : ""; // 👈 取得
             const cssText = await cssRes.text();
             const filterJsText = (filterJsRes && filterJsRes.ok) ? await filterJsRes.text() : "";
             let jsText = await jsRes.text();
@@ -296,6 +302,16 @@
                 const globalData = GM_getValue('nostrurl_global_config', '{"FILTER_MODE":"off","FILTER_DOMAINS":[]}');
                 iframe.contentWindow.localStorage.setItem('nostrurl_config', globalData);
             } catch(e) { console.error("[Nostrurl] iframeへのデータ同期失敗:", e); }
+
+            // 💡 【重要】取得した外部HTMLパーツを、chat.htmlの指定位置（#commentsの直後）に動的合成する
+            const insertMarker = '<div id="comments">Loading comments...</div>';
+            if (htmlText.includes(insertMarker)) {
+                const combinedHtml = insertMarker + "\n" + configHtmlText + "\n" + manualHtmlText;
+                htmlText = htmlText.replace(insertMarker, combinedHtml);
+            } else {
+                // 万が一プレースホルダーが狂っていた場合の保険として末尾直前に結合
+                htmlText = htmlText.replace('</div>\n</body>', configHtmlText + "\n" + manualHtmlText + '</div>\n</body>');
+            }
 
             iframeDoc.write(htmlText);
 
@@ -349,7 +365,7 @@
             }, 1000);
 
         } catch (e) {
-            // 通信エラーが起きたら、自作の親切な通信エラー画面を出す
+            // 通信エラーが起きたら、自作の親親切な通信エラー画面を出す
             showNotice(iframe, networkNoticeHTML);
         }
     }

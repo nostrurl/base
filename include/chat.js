@@ -107,13 +107,19 @@ let isRelayConnected = false;
 let commentList = [];
 let seenEventIds = new Set();
 let roomChangeTimeout = null;
-let isManualMode = false;
+
+// UI表示状態の管理フラグ
+let activeView = 'chat'; // 'chat' | 'config' | 'manual'
 
 // --- 4. DOM要素の取得 ---
 document.getElementById('header-icon').src = chrome.runtime.getURL('icon.png');
 const commentBox = document.getElementById('comments');
-const manualBox = document.getElementById('manual-view');
-const menuBtn = document.getElementById('menu-btn');
+const configBox = document.getElementById('manual-view'); // ⚙️ライブ設定コンテナ (config.html側)
+const manualBox = document.getElementById('manual-content-view'); // 📜ヘルプマニュアルコンテナ (manual.html側)
+
+const menuBtn = document.getElementById('menu-btn'); // ⚙️ボタン
+const manualBtn = document.getElementById('manual-btn'); // 📜ボタン
+
 const inputArea = document.getElementById('input');
 const sendBtn = document.getElementById('send');
 const guiMode = document.getElementById('gui-mode');
@@ -136,9 +142,9 @@ const filterElements = {
 };
 
 // --- 5. UIの初期設定 ---
-guiMode.value = currentConfig.ROOM_MODE;
-guiRoomName.value = currentConfig.CUSTOM_ROOM_NAME;
-activeKeyDisp.innerText = nostrUrlTargetKey;
+if (guiMode) guiMode.value = currentConfig.ROOM_MODE;
+if (guiRoomName) guiRoomName.value = currentConfig.CUSTOM_ROOM_NAME;
+if (activeKeyDisp) activeKeyDisp.innerText = nostrUrlTargetKey;
 
 if (filterElements.guiFilterMode) {
     filterElements.guiFilterMode.value = currentConfig.FILTER_MODE || 'off';
@@ -182,9 +188,9 @@ window.addEventListener('message', (event) => {
 
 function handleRoomChange() {
     nostrUrlTargetKey = generateTargetKey(currentUrl, currentConfig);
-    activeKeyDisp.innerText = nostrUrlTargetKey;
+    if (activeKeyDisp) activeKeyDisp.innerText = nostrUrlTargetKey;
     commentList = []; seenEventIds.clear();
-    commentBox.innerHTML = "Loading comments...";
+    if (commentBox) commentBox.innerHTML = "Loading comments...";
     sockets.forEach((ws, url) => {
         if (ws.readyState === WebSocket.OPEN) {
             if (activeSubs.has(url)) ws.send(JSON.stringify(["CLOSE", activeSubs.get(url)]));
@@ -235,7 +241,8 @@ function connectToRelay(url) {
 }
 
 function renderComments() {
-    if (isManualMode) return;
+    if (activeView !== 'chat') return; // チャット画面以外のときは描写をスキップ
+    if (!commentBox) return;
     if (commentList.length === 0) { 
         commentBox.innerHTML = '<div style="color:#aaa; text-align:center; margin-top:20px;">まだコメントがありません</div>'; 
         return; 
@@ -273,6 +280,7 @@ function renderComments() {
 }
 
 function renderGuiRelayList() {
+    if (!guiRelayList) return;
     guiRelayList.innerHTML = '';
     currentConfig.RELAY_URLS.forEach((url, i) => {
         const li = document.createElement('li');
@@ -317,27 +325,53 @@ const executeSubmit = async () => {
     });
 };
 
-// --- 7. 初期化とイベントリスナー設定 ---
-startPublicKeyMonitor();
-
-menuBtn.onclick = () => {
-    isManualMode = !isManualMode;
-    manualBox.classList.toggle('show-element', isManualMode);
-    manualBox.classList.toggle('hide-element', !isManualMode);
-    commentBox.classList.toggle('hide-element', isManualMode);
-    menuBtn.innerText = isManualMode ? '💬' : '⚙️';
-    
-    if (!isManualMode) {
-        renderComments();
+// --- 7. ビュー（表示切り替え）の一元管理ロジック ---
+function switchView(target) {
+    if (activeView === target) {
+        // 同じボタンを押した場合はチャットに戻る
+        activeView = 'chat';
     } else {
-        // 設定（⚙️）を開いた瞬間にLocalStorageの最新データを再ロードして同期する
+        activeView = target;
+    }
+
+    // 各要素のクラスをトグル
+    if (commentBox) commentBox.classList.toggle('hide-element', activeView !== 'chat');
+    
+    if (configBox) {
+        configBox.classList.toggle('show-element', activeView === 'config');
+        configBox.classList.toggle('hide-element', activeView !== 'config');
+    }
+    
+    if (manualBox) {
+        manualBox.classList.toggle('show-element', activeView === 'manual');
+        manualBox.classList.toggle('hide-element', activeView !== 'manual');
+    }
+
+    // ボタンテキスト・アイコンの見た目を同期
+    menuBtn.innerText = (activeView === 'config') ? '💬' : '⚙️';
+    manualBtn.innerText = (activeView === 'manual') ? '💬' : '📜';
+
+    // 画面が戻ったか開いたかに応じた処理
+    if (activeView === 'chat') {
+        renderComments();
+    } else if (activeView === 'config') {
         currentConfig = loadConfig(); 
         if (filterElements.guiFilterMode) {
             filterElements.guiFilterMode.value = currentConfig.FILTER_MODE || 'off';
         }
         window.NostrFilterManager.renderGuiFilterList(currentConfig, currentDomain, filterElements);
     }
-};
+}
+
+// --- 8. 初期化とイベントリスナー設定 ---
+startPublicKeyMonitor();
+
+// ⚙️ ライブ設定ボタンクリック
+menuBtn.onclick = () => switchView('config');
+
+// 📜 ヘルプマニュアルボタンクリック
+manualBtn.onclick = () => switchView('manual');
+
 
 // ================= フィルターUIのイベントリスナー設定 =================
 
@@ -382,11 +416,15 @@ if (filterElements.guiFilterAddBtn) {
     };
 }
 
-sendBtn.onclick = executeSubmit;
-inputArea.onkeydown = (e) => { if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') executeSubmit(); };
+if (sendBtn) sendBtn.onclick = executeSubmit;
+if (inputArea) {
+    inputArea.onkeydown = (e) => { if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') executeSubmit(); };
+}
 
 currentConfig.RELAY_URLS.forEach(url => connectToRelay(url));
 renderGuiRelayList();
 
 // 初期レンダリング
-window.NostrFilterManager.renderGuiFilterList(currentConfig, currentDomain, filterElements);
+if (window.NostrFilterManager && typeof window.NostrFilterManager.renderGuiFilterList === 'function') {
+    window.NostrFilterManager.renderGuiFilterList(currentConfig, currentDomain, filterElements);
+}
