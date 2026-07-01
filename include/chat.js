@@ -91,9 +91,9 @@ function saveConfig(config) {
     localStorage.setItem('nostrurl_config', JSON.stringify(config));
     console.log("[chat.js] 設定を保存しました:", config);
     
-    // 2. 親へデータプッシュ
+    // 2. user.jsへデータプッシュ
     if (window.parent) {
-        console.log("[chat.js] 親へ設定を送信します...");
+        console.log("[chat.js] user.jsへ設定を送信します...");
         window.parent.postMessage({
             type: 'NOSTRURL_CONFIG_UPDATE',
             config: config

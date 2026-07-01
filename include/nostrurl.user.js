@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Nostrurl (ユーザースクリプト版)
 // @namespace    nostrurl.github.io/base/
-// @version      6.7.5
+// @version      6.7.6
 // @description  URLをタグにしたNostrコメント欄を設ける
 // @author       Nostrurl
 // @match        http://*/*
@@ -278,7 +278,7 @@
         try {
             const timestamp = Date.now();
             
-            // 特権通信（customFetch）を使って安全にロード（configとmanualを配列に追加）
+            // 特権通信（customFetch）を使って安全にロード
             const [htmlRes, configHtmlRes, manualHtmlRes, cssRes, filterJsRes, jsRes, purgeRes] = await Promise.all([
                 customFetch(`${GITHUB_RAW_HTML_URL}?t=${timestamp}`).catch(() => null),
                 customFetch(`${GITHUB_RAW_CONFIG_URL}?t=${timestamp}`).catch(() => null),
@@ -311,47 +311,30 @@
                 }
             }
 
-			const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+			// ---------------------------------------------------------
+            // iframe 構築とデータ同期ブロック
+            // ---------------------------------------------------------
+            const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
             iframeDoc.open();
 
-            // 同期処理
-			try {
-				const globalData = GM_getValue('nostrurl_global_config');
-				if (globalData) {
-					// chat.js 側の loadConfig が期待するキー名へ同期する
-					iframe.contentWindow.localStorage.setItem('nostrurl_config', globalData);
-				}
-			} catch(e) { console.error("[Nostrurl] 同期失敗:", e); }
-
-            // 取得した外部HTMLパーツを、chat.htmlの指定位置（#commentsの直後）に動的合成する
-            const insertMarker = '<div id="comments">Loading comments...</div>';
-            if (htmlText.includes(insertMarker)) {
-                const combinedHtml = insertMarker + "\n" + configHtmlText + "\n" + manualHtmlText;
-                htmlText = htmlText.replace(insertMarker, combinedHtml);
-            } else {
-                // 万が一プレースホルダーが狂っていた場合の保険として末尾直前に結合
-                htmlText = htmlText.replace('</div>\n</body>', configHtmlText + "\n" + manualHtmlText + '</div>\n</body>');
-            }
-
+            // 1. まずHTMLの全内容を書き込む
             iframeDoc.write(htmlText);
 
+            // 2. 書き込んだ後、user.js のストレージから chat.js へ設定を同期
+            try {
+                const globalData = GM_getValue('nostrurl_global_config');
+                if (globalData) {
+                    iframe.contentWindow.localStorage.setItem('nostrurl_config', globalData);
+                    console.log("[Nostrurl] user.js から chat.js へ設定を同期完了");
+                }
+            } catch(e) {
+                console.error("[Nostrurl] 同期処理エラー:", e);
+            }
+
+            // 3. スタイルとスクリプトを注入（ここから下が重要）
             const styleElement = iframeDoc.createElement('style');
             styleElement.textContent = cssText;
             iframeDoc.head.appendChild(styleElement);
-
-            const versionElement = iframeDoc.querySelector('.version-info');
-            if (versionElement) versionElement.innerText = typeof GM_info !== 'undefined' ? `v${GM_info.script.version}` : 'v6.5.1';
-
-            let isStorageAvailable = false;
-            try {
-                window.localStorage.setItem('__nostr_test__', '1');
-                window.localStorage.removeItem('__nostr_test__');
-                isStorageAvailable = true;
-            } catch (e) {}
-
-            iframe.contentWindow.REAL_PARENT_URL = targetUrl.toString();
-            iframe.contentWindow.NOSTR_CHAT_ALIVE = false;
-            iframe.contentWindow.PARENT_STORAGE_AVAILABLE = isStorageAvailable;
 
             // domain-filter.js の流し込み
             if (filterJsText) {
@@ -360,12 +343,17 @@
                 iframeDoc.body.appendChild(filterScriptElement);
             }
 
-            // chat.js の流し込み
+            // chat.js の流し込み（これが1回だけであること）
             const scriptElement = iframeDoc.createElement('script');
             scriptElement.textContent = jsText;
             iframeDoc.body.appendChild(scriptElement);
             
+            // 4. 最後に閉じる
             iframeDoc.close();
+            // ---------------------------------------------------------
+
+            const versionElement = iframeDoc.querySelector('.version-info');
+            if (versionElement) versionElement.innerText = typeof GM_info !== 'undefined' ? `v${GM_info.script.version}` : '不正なバージョン';
 
             setTimeout(() => {
                 // もしCSPでチャットのスクリプト実行（NOSTR_CHAT_ALIVE）が止められたら
@@ -398,21 +386,5 @@
             iframeDoc.close();
         } catch (e) {}
     }
-	
-	// --- [user.js]側での受信・保存処理 ---
-	window.addEventListener('message', (event) => {
-		// 送信元がこのスクリプトに関連するものであるか確認（セキュリティ対策）
-		if (event.data && event.data.type === 'NOSTRURL_CONFIG_UPDATE') {
-			console.log("[user.js] chat.jsから設定データを受信しました:", event.data.config);
-			
-			// 永続化（GM_setValueを使用）
-			try {
-				GM_setValue('nostrurl_global_config', JSON.stringify(event.data.config));
-				console.log("[user.js] 設定を永続ストレージに保存しました。");
-			} catch (e) {
-				console.error("[user.js] 保存に失敗しました:", e);
-			}
-		}
-	});
 	
 })();
