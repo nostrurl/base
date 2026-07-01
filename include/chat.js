@@ -475,3 +475,35 @@ renderGuiRelayList();
 if (window.NostrFilterManager && typeof window.NostrFilterManager.renderGuiFilterList === 'function') {
     window.NostrFilterManager.renderGuiFilterList(currentConfig, currentDomain, filterElements);
 }
+
+
+// ================= ライブ設定：リレー追加ボタンの処理 =================
+if (guiRelayAddBtn && guiRelayInput) {
+    guiRelayAddBtn.onclick = () => {
+        const newRelayUrl = guiRelayInput.value.trim();
+        if (!newRelayUrl) return;
+
+        // wss:// から始まっているか簡易チェック
+        if (!newRelayUrl.startsWith('wss://') && !newRelayUrl.startsWith('ws://')) {
+            alert('リレーURLは wss:// または ws:// から始めてね！');
+            return;
+        }
+
+        // 重複チェック
+        if (currentConfig.RELAY_URLS.includes(newRelayUrl)) {
+            alert('このリレーはすでに追加されているよ！');
+            return;
+        }
+
+        // 設定の配列に追加して保存
+        currentConfig.RELAY_URLS.push(newRelayUrl);
+        saveConfig(currentConfig);
+
+        // 新しいリレーにその場で即座に接続を開始
+        connectToRelay(newRelayUrl);
+
+        // UI（一覧表示）を更新して、入力欄を空にする
+        renderGuiRelayList();
+        guiRelayInput.value = '';
+    };
+}
