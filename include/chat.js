@@ -242,6 +242,8 @@ function connectToRelay(url) {
 			// Public仕様：部屋なんて関係ない、最新の投稿（kind:1）を何でも50件Get！
 			ws.send(JSON.stringify(["REQ", subId, { "kinds": [1], "limit": 50 }]));
         };
+		
+		/*
         ws.onmessage = (event) => {
             const data = JSON.parse(event.data);
             if (data[0] === "EVENT") {
@@ -251,6 +253,22 @@ function connectToRelay(url) {
                 }
             }
         };
+		*/
+		
+                
+        // ⭕ 部屋名（#r）のチェックを撤廃！重複チェック（seenEventIds）だけで即採用する
+		ws.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            if (data[0] === "EVENT") {
+                const nostrEvent = data[2];
+                if (!seenEventIds.has(nostrEvent.id)) {
+                    seenEventIds.add(nostrEvent.id); 
+                    commentList.push(nostrEvent); 
+                    renderComments();
+                }
+            }
+        };
+		
         ws.onclose = () => {
             sockets.delete(url); activeSubs.delete(url);
             isRelayConnected = Array.from(sockets.values()).some(s => s.readyState === WebSocket.OPEN);
