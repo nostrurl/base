@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Nostrurl (ユーザースクリプト版)
 // @namespace    nostrurl.github.io/base/
-// @version      6.7.3
+// @version      6.7.4
 // @description  URLをタグにしたNostrコメント欄を設ける
 // @author       Nostrurl
 // @match        http://*/*
@@ -76,56 +76,61 @@
     }
 
 	// ─── メッセージ受信（1回だけ実行される） ───
+	// 表示状態を更新する独立した関数を追加
+	function updateUIStateByFilter(config) {
+		const { FILTER_MODE, FILTER_DOMAINS } = config;
+		let shouldBlock = false;
+		
+		if (FILTER_MODE === 'whitelist') {
+			shouldBlock = !FILTER_DOMAINS.includes(currentDomain);
+		} else if (FILTER_MODE === 'blacklist') {
+			shouldBlock = FILTER_DOMAINS.includes(currentDomain);
+		}
+
+		if (shouldBlock) {
+			if (isOpen) closeSidebar();
+			if (globalToggleBar) globalToggleBar.style.display = 'none';
+			if (globalCommentIframe) globalCommentIframe.style.display = 'none';
+		} else {
+			if (!globalToggleBar) {
+				setupParallelUI();
+			} else {
+				globalToggleBar.style.display = 'flex';
+				if (isOpen && globalCommentIframe) globalCommentIframe.style.display = 'block';
+			}
+		}
+	}
+
+	// listenToFilterUpdate の中身
 	function listenToFilterUpdate() {
-        if (isListenerRegistered) return;
-        isListenerRegistered = true;
+		if (isListenerRegistered) return;
+		isListenerRegistered = true;
 
-        window.addEventListener('message', (event) => {
-            if (!event.data) return;
+		window.addEventListener('message', (event) => {
+			if (!event.data || !event.data.type) return;
 
-            // 設定更新のメッセージなら何でも「オブジェクト全体」として保存する
-            if (event.data.type === 'NOSTRURL_CONFIG_UPDATE' || event.data.type === 'NOSTRURL_FILTER_UPDATE') {
-                
-                // 1. 現在の保存データを取得
-                let globalConfig = {};
-                try {
-                    const saved = GM_getValue('nostrurl_global_config');
-                    globalConfig = saved ? JSON.parse(saved) : {};
-                } catch(e) {}
-                
-                // 2. 更新データで統合
-                // chat.js から送られてくる config オブジェクトをそのまま反映
-                if (event.data.config) {
-                    Object.assign(globalConfig, event.data.config);
-                }
-                // フィルター更新の場合のプロパティ反映
-                if (event.data.type === 'NOSTRURL_FILTER_UPDATE') {
-                    globalConfig.FILTER_MODE = event.data.filterMode;
-                    globalConfig.FILTER_DOMAINS = event.data.filterDomains;
-                }
-                
-                // 3. 一元的に保存
-                GM_setValue('nostrurl_global_config', JSON.stringify(globalConfig));
+			if (event.data.type === 'NOSTRURL_CONFIG_UPDATE' || event.data.type === 'NOSTRURL_FILTER_UPDATE') {
+				let globalConfig = {};
+				try {
+					const saved = GM_getValue('nostrurl_global_config');
+					globalConfig = saved ? JSON.parse(saved) : {};
+				} catch(e) {}
 
-                if (currentShouldBlock) {
-                    // 非表示対象になった場合
-                    if (isOpen) closeSidebar();
-                    if (globalToggleBar) globalToggleBar.style.display = 'none';
-                    if (globalCommentIframe) globalCommentIframe.style.display = 'none';
-                } else {
-                    // 表示対象になった場合
-                    if (!globalToggleBar) {
-                        setupParallelUI(); // UIがまだなければ新規作成（ここでの重複登録はフラグでガード済）
-                    } else {
-                        globalToggleBar.style.display = 'flex';
-                        if (isOpen && globalCommentIframe) {
-                            globalCommentIframe.style.display = 'block';
-                        }
-                    }
-                }
-            }
-        });
-    }
+				// 1. 設定の統合
+				if (event.data.config) Object.assign(globalConfig, event.data.config);
+				if (event.data.type === 'NOSTRURL_FILTER_UPDATE') {
+					globalConfig.FILTER_MODE = event.data.filterMode;
+					globalConfig.FILTER_DOMAINS = event.data.filterDomains;
+				}
+
+				// 2. 永続化
+				GM_setValue('nostrurl_global_config', JSON.stringify(globalConfig));
+
+				// 3. 判定ロジックの再実行（これで競合しない）
+				updateUIStateByFilter(globalConfig);
+			}
+		});
+	}
 
     function closeSidebar() {
         isOpen = false;

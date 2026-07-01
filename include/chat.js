@@ -87,20 +87,18 @@ function loadConfig() {
 
 // 設定を保存する関数
 function saveConfig(config) {
-    try {
-        // 自分のlocalStorageに保存
-        if (typeof GM_setValue !== 'undefined') {
-            GM_setValue('nostrurl_config', config);
-        }
-        
-        // 親へ「更新用オブジェクト」としてまるごと送信
-        if (window.parent) {
-            window.parent.postMessage({
-                type: 'NOSTRURL_CONFIG_UPDATE',
-                config: config // ここで設定オブジェクト全体を渡す
-            }, '*');
-        }
-    } catch (e) { console.error("設定の保存に失敗:", e); }
+    // 1. ローカルへの保存
+    localStorage.setItem('nostrurl_config', JSON.stringify(config));
+    console.log("[chat.js] 設定を保存しました:", config);
+    
+    // 2. 親へデータプッシュ
+    if (window.parent) {
+        console.log("[chat.js] 親へ設定を送信します...");
+        window.parent.postMessage({
+            type: 'NOSTRURL_CONFIG_UPDATE',
+            config: config
+        }, '*');
+    }
 }
 
 // GUI上のリレー一覧をレンダリングする関数（削除ボタン内蔵）
