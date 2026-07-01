@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Nostrurl (ユーザースクリプト版)
 // @namespace    nostrurl.github.io/base/
-// @version      6.7.1
+// @version      6.7.3
 // @description  URLをタグにしたNostrコメント欄を設ける
 // @author       Nostrurl
 // @match        http://*/*
@@ -75,25 +75,37 @@
         return false;
     }
 
-    // ─── メッセージ受信（1回だけ実行される） ───
-    function listenToFilterUpdate() {
-        if (isListenerRegistered) return; // 既に登録されていればスキップ
+	// ─── メッセージ受信（1回だけ実行される） ───
+	function listenToFilterUpdate() {
+        if (isListenerRegistered) return;
         isListenerRegistered = true;
 
-		window.addEventListener('message', (event) => {
-            if (event.data && event.data.type === 'NOSTRURL_FILTER_UPDATE') {
-                const { filterMode, filterDomains } = event.data;
+        window.addEventListener('message', (event) => {
+            if (!event.data) return;
 
-                // メッセージを受け取ったら、即座に全サイト共通ストレージ（GM_setValue）に保存する
-                const newConfig = { FILTER_MODE: filterMode, FILTER_DOMAINS: filterDomains };
-                GM_setValue('nostrurl_global_config', JSON.stringify(newConfig));
+            // 設定更新のメッセージなら何でも「オブジェクト全体」として保存する
+            if (event.data.type === 'NOSTRURL_CONFIG_UPDATE' || event.data.type === 'NOSTRURL_FILTER_UPDATE') {
                 
-                let currentShouldBlock = false;
-                if (filterMode === 'whitelist') {
-                    currentShouldBlock = !filterDomains.includes(currentDomain);
-                } else if (filterMode === 'blacklist') {
-                    currentShouldBlock = filterDomains.includes(currentDomain);
+                // 1. 現在の保存データを取得
+                let globalConfig = {};
+                try {
+                    const saved = GM_getValue('nostrurl_global_config');
+                    globalConfig = saved ? JSON.parse(saved) : {};
+                } catch(e) {}
+                
+                // 2. 更新データで統合
+                // chat.js から送られてくる config オブジェクトをそのまま反映
+                if (event.data.config) {
+                    Object.assign(globalConfig, event.data.config);
                 }
+                // フィルター更新の場合のプロパティ反映
+                if (event.data.type === 'NOSTRURL_FILTER_UPDATE') {
+                    globalConfig.FILTER_MODE = event.data.filterMode;
+                    globalConfig.FILTER_DOMAINS = event.data.filterDomains;
+                }
+                
+                // 3. 一元的に保存
+                GM_setValue('nostrurl_global_config', JSON.stringify(globalConfig));
 
                 if (currentShouldBlock) {
                     // 非表示対象になった場合
@@ -264,8 +276,8 @@
             // 特権通信（customFetch）を使って安全にロード（configとmanualを配列に追加）
             const [htmlRes, configHtmlRes, manualHtmlRes, cssRes, filterJsRes, jsRes, purgeRes] = await Promise.all([
                 customFetch(`${GITHUB_RAW_HTML_URL}?t=${timestamp}`).catch(() => null),
-                customFetch(`${GITHUB_RAW_CONFIG_URL}?t=${timestamp}`).catch(() => null), // 👈 追加
-                customFetch(`${GITHUB_RAW_MANUAL_URL}?t=${timestamp}`).catch(() => null), // 👈 追加
+                customFetch(`${GITHUB_RAW_CONFIG_URL}?t=${timestamp}`).catch(() => null),
+                customFetch(`${GITHUB_RAW_MANUAL_URL}?t=${timestamp}`).catch(() => null),
                 customFetch(`${GITHUB_RAW_CSS_URL}?t=${timestamp}`).catch(() => null),
                 customFetch(`${GITHUB_RAW_FILTER_JS_URL}?t=${timestamp}`).catch(() => null),
                 customFetch(`${GITHUB_RAW_JS_URL}?t=${timestamp}`).catch(() => null),
@@ -275,8 +287,8 @@
             if (!htmlRes || !htmlRes.ok || !cssRes || !cssRes.ok || !jsRes || !jsRes.ok) throw new Error("HTTP_ERROR");
 
             let htmlText = await htmlRes.text();
-            const configHtmlText = (configHtmlRes && configHtmlRes.ok) ? await configHtmlRes.text() : ""; // 👈 取得
-            const manualHtmlText = (manualHtmlRes && manualHtmlRes.ok) ? await manualHtmlRes.text() : ""; // 👈 取得
+            const configHtmlText = (configHtmlRes && configHtmlRes.ok) ? await configHtmlRes.text() : "";
+            const manualHtmlText = (manualHtmlRes && manualHtmlRes.ok) ? await manualHtmlRes.text() : "";
             const cssText = await cssRes.text();
             const filterJsText = (filterJsRes && filterJsRes.ok) ? await filterJsRes.text() : "";
             let jsText = await jsRes.text();
@@ -297,13 +309,16 @@
 			const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
             iframeDoc.open();
 
-            // チャット画面が開いた瞬間に、共通ストレージのデータを設定画面に同期する
-            try {
-                const globalData = GM_getValue('nostrurl_global_config', '{"FILTER_MODE":"off","FILTER_DOMAINS":[]}');
-                iframe.contentWindow.localStorage.setItem('nostrurl_config', globalData);
-            } catch(e) { console.error("[Nostrurl] iframeへのデータ同期失敗:", e); }
+            // 同期処理
+			try {
+				const globalData = GM_getValue('nostrurl_global_config');
+				if (globalData) {
+					// chat.js 側の loadConfig が期待するキー名へ同期する
+					iframe.contentWindow.localStorage.setItem('nostrurl_config', globalData);
+				}
+			} catch(e) { console.error("[Nostrurl] 同期失敗:", e); }
 
-            // 💡 【重要】取得した外部HTMLパーツを、chat.htmlの指定位置（#commentsの直後）に動的合成する
+            // 取得した外部HTMLパーツを、chat.htmlの指定位置（#commentsの直後）に動的合成する
             const insertMarker = '<div id="comments">Loading comments...</div>';
             if (htmlText.includes(insertMarker)) {
                 const combinedHtml = insertMarker + "\n" + configHtmlText + "\n" + manualHtmlText;

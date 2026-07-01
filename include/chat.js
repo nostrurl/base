@@ -56,26 +56,31 @@ const DEFAULT_CONFIG = {
 
 // --- 2. 関数定義 ---
 function loadConfig() {
-    // ローカルストレージは完全撤廃、GM領域のみを見る
+    // 1. まずGMからデータを取得
     const saved = typeof GM_getValue !== 'undefined' ? GM_getValue('nostrurl_config') : null;
-
-    const defaultCopy = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
+    
+    // 2. 常に初期値をベースにする
+    let config = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
+    
     if (saved) {
         try {
             const parsed = typeof saved === 'string' ? JSON.parse(saved) : saved;
             
-            // 💡 1階層目をマージしたあと、配列（2階層目）はストレージ側の最新データを絶対最優先で上書きする
-            const merged = Object.assign({}, defaultCopy, parsed);
-            if (parsed.RELAY_URLS) merged.RELAY_URLS = [...parsed.RELAY_URLS];
-            if (parsed.FILTER_DOMAINS) merged.FILTER_DOMAINS = [...parsed.FILTER_DOMAINS];
+            // 3. ルート階層（ROOM_MODEなど）を上書き
+            Object.assign(config, parsed);
             
-            return merged;
-        } catch (e) { 
-            console.error("Config parse error:", e); 
-            return defaultCopy;
+            // 4. 【重要】配列（リレー一覧）は、保存されている場合のみ初期値を「完全に置き換える」
+            if (parsed.RELAY_URLS && Array.isArray(parsed.RELAY_URLS)) {
+                config.RELAY_URLS = parsed.RELAY_URLS;
+            }
+            if (parsed.FILTER_DOMAINS && Array.isArray(parsed.FILTER_DOMAINS)) {
+                config.FILTER_DOMAINS = parsed.FILTER_DOMAINS;
+            }
+        } catch (e) {
+            console.error("Config load error:", e);
         }
     }
-    return defaultCopy;
+    return config;
 }
 
 // ================= 設定の保存（GM関数によるユーザー主権の確立） =================
@@ -83,24 +88,19 @@ function loadConfig() {
 // 設定を保存する関数
 function saveConfig(config) {
     try {
-        // Tampermonkeyの強固な保存領域に保存
+        // 自分のlocalStorageに保存
         if (typeof GM_setValue !== 'undefined') {
             GM_setValue('nostrurl_config', config);
-        } else {
-            localStorage.setItem('nostrurl_config', JSON.stringify(config));
         }
-    } catch (e) {
-        console.error("設定の保存に失敗したよ:", e);
-    }
-
-    // 親画面への通知（既存ロジック）
-    if (window.parent) {
-        window.parent.postMessage({
-            type: 'NOSTRURL_FILTER_UPDATE',
-            filterMode: config.FILTER_MODE,
-            filterDomains: config.FILTER_DOMAINS
-        }, '*');
-    }
+        
+        // 親へ「更新用オブジェクト」としてまるごと送信
+        if (window.parent) {
+            window.parent.postMessage({
+                type: 'NOSTRURL_CONFIG_UPDATE',
+                config: config // ここで設定オブジェクト全体を渡す
+            }, '*');
+        }
+    } catch (e) { console.error("設定の保存に失敗:", e); }
 }
 
 // GUI上のリレー一覧をレンダリングする関数（削除ボタン内蔵）
