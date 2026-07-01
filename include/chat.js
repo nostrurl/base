@@ -56,7 +56,6 @@ const DEFAULT_CONFIG = {
 
 // --- 2. 関数定義 ---
 function loadConfig() {
-    // Tampermonkeyの保存領域（GM_getValue）からまず探す
     const saved = typeof GM_getValue !== 'undefined' 
         ? GM_getValue('nostrurl_config') 
         : localStorage.getItem('nostrurl_config');
@@ -64,9 +63,9 @@ function loadConfig() {
     const defaultCopy = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
     if (saved) {
         try {
-            // GM_getValue は最初からオブジェクトとして取り出せる場合があるためチェック
             const parsed = typeof saved === 'string' ? JSON.parse(saved) : saved;
-            return { ...defaultCopy, ...parsed };
+            // parsed の中身を defaultCopy で包み込んで、足りない項目（RELAY_URLS等）を絶対に補完する
+            return Object.assign({}, defaultCopy, parsed);
         } catch (e) { 
             console.error("Config parse error:", e); 
             return defaultCopy;
@@ -160,12 +159,14 @@ let currentConfig = (() => {
             : localStorage.getItem('nostrurl_config');
             
         if (saved) {
-            return typeof saved === 'string' ? JSON.parse(saved) : saved;
+            const parsed = typeof saved === 'string' ? JSON.parse(saved) : saved;
+            // ここも確実にデフォルトの構造と合体させる
+            return Object.assign({}, JSON.parse(JSON.stringify(DEFAULT_CONFIG)), parsed);
         }
     } catch (e) {
         console.error("初期設定の読み込みに失敗:", e);
     }
-    return JSON.parse(JSON.stringify(DEFAULT_CONFIG)); // コピー
+    return JSON.parse(JSON.stringify(DEFAULT_CONFIG));
 })();
 const sockets = new Map();
 const activeSubs = new Map();
@@ -349,17 +350,17 @@ function connectToRelay(url) {
             sockets.delete(url); activeSubs.delete(url);
             isRelayConnected = Array.from(sockets.values()).some(s => s.readyState === WebSocket.OPEN);
             updateStatusUI();
-            if (currentConfig.RELAY_URLS.includes(url)) {
-                const timer = setTimeout(() => connectToRelay(url), currentConfig.RECONNECT_INTERVAL);
-                reconnectTimeouts.set(url, timer);
-            }
+			if (currentConfig.RELAY_URLS?.includes(url)) {
+				const timer = setTimeout(() => connectToRelay(url), currentConfig.RECONNECT_INTERVAL);
+				reconnectTimeouts.set(url, timer);
+			}
         };
     } catch (e) {
-        if (currentConfig.RELAY_URLS.includes(url)) {
-            const timer = setTimeout(() => connectToRelay(url), currentConfig.RECONNECT_INTERVAL);
-            reconnectTimeouts.set(url, timer);
-        }
-    }
+		if (currentConfig.RELAY_URLS?.includes(url)) {
+			const timer = setTimeout(() => connectToRelay(url), currentConfig.RECONNECT_INTERVAL);
+			reconnectTimeouts.set(url, timer);
+		}
+	}
 }
 
 function renderComments() {
@@ -572,10 +573,10 @@ if (guiRelayAddBtn && guiRelayInput) {
         }
 
         // 重複チェック
-        if (currentConfig.RELAY_URLS.includes(newRelayUrl)) {
-            alert('このリレーはすでに追加されているよ！');
-            return;
-        }
+		if (currentConfig.RELAY_URLS?.includes(newRelayUrl)) {
+			alert('このリレーはすでに追加されているよ！');
+			return;
+		}
 
         // 設定の配列に追加して保存
         currentConfig.RELAY_URLS.push(newRelayUrl);
