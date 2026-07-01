@@ -150,15 +150,16 @@ if (filterElements.guiFilterMode) {
     filterElements.guiFilterMode.value = currentConfig.FILTER_MODE || 'off';
 }
 
-// 初期状態（起動時）はチャット画面のみ表示し、設定とマニュアルは完全に隠す
-if (commentBox) commentBox.classList.remove('hide-element');
+// 初期状態はチャット画面（通常表示）にし、設定とマニュアルのコンテナを確実に隠す
+if (commentBox) commentBox.style.display = 'block'; 
+
 if (configBox) {
     configBox.classList.remove('show-element');
-    configBox.classList.add('hide-element');
+    configBox.style.display = 'none'; // CSSの初期状態に合わせる
 }
 if (manualBox) {
-    manualBox.remove('show-element');
-    manualBox.classList.add('hide-element');
+    manualBox.classList.remove('show-element');
+    manualBox.style.display = 'none'; // マニュアル側も明示的に非表示
 }
 
 // --- 6. 処理ロジック ---
@@ -339,30 +340,44 @@ const executeSubmit = async () => {
 // --- 7. ビュー（表示切り替え）の一元管理ロジック ---
 function switchView(target) {
     if (activeView === target) {
-        // 同じボタンを押した場合はチャットに戻る
+        // 同じボタンを押した場合はチャット（通常状態）に戻す
         activeView = 'chat';
     } else {
         activeView = target;
     }
 
-    // 各要素のクラスをトグル
-    if (commentBox) commentBox.classList.toggle('hide-element', activeView !== 'chat');
+    // 1. チャット欄の表示・非表示を切り替え
+    if (commentBox) {
+        commentBox.style.display = (activeView === 'chat') ? 'block' : 'none';
+    }
     
+    // 2. ⚙️ライブ設定コンテナ（#manual-view）の切り替え
     if (configBox) {
-        configBox.classList.toggle('show-element', activeView === 'config');
-        configBox.classList.toggle('hide-element', activeView !== 'config');
+        if (activeView === 'config') {
+            configBox.style.display = 'block'; // 領域を確保させて綺麗に浮かす
+            configBox.classList.add('show-element');
+        } else {
+            configBox.style.display = 'none';
+            configBox.classList.remove('show-element');
+        }
     }
     
+    // 3. 📜ヘルプマニュアルコンテナ（#manual-content-view）の切り替え
     if (manualBox) {
-        manualBox.classList.toggle('show-element', activeView === 'manual');
-        manualBox.classList.toggle('hide-element', activeView !== 'manual');
+        if (activeView === 'manual') {
+            manualBox.style.display = 'block';
+            manualBox.classList.add('show-element');
+        } else {
+            manualBox.style.display = 'none';
+            manualBox.classList.remove('show-element');
+        }
     }
 
-    // ボタンテキスト・アイコンの見た目を同期
-    menuBtn.innerText = (activeView === 'config') ? '💬' : '⚙️';
-    manualBtn.innerText = (activeView === 'manual') ? '💬' : '📜';
+    // ボタンのアイコン（💬 ⇄ ⚙️/📜）の表示を同期
+    if (menuBtn) menuBtn.innerText = (activeView === 'config') ? '💬' : '⚙️';
+    if (manualBtn) manualBtn.innerText = (activeView === 'manual') ? '💬' : '📜';
 
-    // 画面が戻ったか開いたかに応じた処理
+    // 画面が戻ったか開いたかに応じたデータ更新
     if (activeView === 'chat') {
         renderComments();
     } else if (activeView === 'config') {
@@ -378,10 +393,14 @@ function switchView(target) {
 startPublicKeyMonitor();
 
 // ⚙️ ライブ設定ボタンクリック
-menuBtn.onclick = () => switchView('config');
+if (menuBtn) {
+    menuBtn.onclick = () => switchView('config');
+}
 
 // 📜 ヘルプマニュアルボタンクリック
-manualBtn.onclick = () => switchView('manual');
+if (manualBtn) {
+    manualBtn.onclick = () => switchView('manual');
+}
 
 
 // ================= フィルターUIのイベントリスナー設定 =================
