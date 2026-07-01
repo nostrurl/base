@@ -104,42 +104,44 @@ function renderGuiRelayList() {
     if (!guiRelayList) return;
     guiRelayList.innerHTML = '';
 
-    currentConfig.RELAY_URLS.forEach((url, index) => {
-        const item = document.createElement('div');
-        item.style.display = 'flex';
-        item.style.justifyContent = 'space-between';
-        item.style.alignItems = 'center';
-        item.style.marginBottom = '5px';
+    // クラッシュ防止に安全ガードを追加
+    if (currentConfig && currentConfig.RELAY_URLS) {
+        currentConfig.RELAY_URLS.forEach((url, index) => {
+            // 💡 CSSで定義されている「.gui-relay-item」クラスを適用して枠組みを作る
+            const item = document.createElement('div');
+            item.className = 'gui-relay-item';
 
-        const urlSpan = document.createElement('span');
-        urlSpan.innerText = url;
-        item.appendChild(urlSpan);
+            const urlSpan = document.createElement('span');
+            urlSpan.innerText = url;
+            item.appendChild(urlSpan);
 
-        const removeBtn = document.createElement('button');
-        removeBtn.innerText = '解除';
-        removeBtn.style.marginLeft = '10px';
-        
-        // ユーザーの意思でリレーを捨てる自由（切断＆削除＆保存）
-        removeBtn.onclick = () => {
-            currentConfig.RELAY_URLS.splice(index, 1);
-            saveConfig(currentConfig); // 変更をGM領域へ保存
+            // 💡 CSSで定義されている「.gui-btn-del」クラスを適用して削除ボタンを作る
+            const removeBtn = document.createElement('button');
+            removeBtn.className = 'gui-btn-del';
+            removeBtn.innerText = '解除';
             
-            // 接続中のWebSocketがあれば切断して管理から消す
-            if (sockets.has(url)) {
-                const ws = sockets.get(url);
-                if (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING) {
-                    ws.close();
+            // ユーザーの意思でリレーを捨てる自由（切断＆削除＆保存）
+            removeBtn.onclick = () => {
+                currentConfig.RELAY_URLS.splice(index, 1);
+                saveConfig(currentConfig); // 変更をGM領域へ保存
+                
+                // 接続中のWebSocketがあれば切断して管理から消す
+                if (sockets.has(url)) {
+                    const ws = sockets.get(url);
+                    if (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING) {
+                        ws.close();
+                    }
+                    sockets.delete(url);
+                    if (activeSubs.has(url)) activeSubs.delete(url);
                 }
-                sockets.delete(url);
-                if (activeSubs.has(url)) activeSubs.delete(url);
-            }
-            
-            renderGuiRelayList(); // UI更新
-        };
+                
+                renderGuiRelayList(); // UI更新
+            };
 
-        item.appendChild(removeBtn);
-        guiRelayList.appendChild(item);
-    });
+            item.appendChild(removeBtn);
+            guiRelayList.appendChild(item);
+        });
+    }
 }
 
 function generateTargetKey(url, config) {
